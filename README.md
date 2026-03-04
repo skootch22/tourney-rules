@@ -1,0 +1,108 @@
+# ⚾ Tournament Rules Viewer
+
+A mobile-friendly web page for looking up baseball tournament rules. Data is pulled live from a published Google Sheet, so rules can be updated by anyone with sheet access — no code changes needed.
+
+---
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `index.html` | The main web page |
+| `config.js` | Configuration — put your Google Sheet URL here |
+| `mockup.html` | Standalone preview with sample data (no sheet required) |
+
+---
+
+## Setup
+
+### 1. Create your Google Sheet
+
+Set up a sheet with the following columns **in this exact order**. The first row should be a header row (it is skipped automatically).
+
+| Column | Type | Notes |
+|---|---|---|
+| Active | Boolean | `TRUE`, `yes`, or `1` to include in dropdown |
+| Tournament | Text | Tournament name shown in the dropdown |
+| Location | Text | Venue / city |
+| Time Limit | Text | e.g. `1:45` |
+| Innings | Integer | e.g. `6` |
+| Mercy Rule | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
+| Pitching Limits | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
+| Balks | Text | e.g. `Enforced` or `Warning first` |
+| Courtesy Runner | Text | e.g. `Pitcher & catcher only` |
+| Extra Inning | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
+| Tie Breaker | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
+| Rules URL | URL | Optional. Link to official rules PDF or page. Leave blank to hide the button. |
+
+> **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
+> ```html
+> <p><strong>10 runs</strong> after 4 innings<br><strong>8 runs</strong> after 5 innings</p>
+> ```
+
+### 2. Publish the sheet as CSV
+
+1. In Google Sheets, go to **File → Share → Publish to web**
+2. In the first dropdown, select your sheet tab
+3. In the second dropdown, select **Comma-separated values (.csv)**
+4. Click **Publish** and copy the URL
+
+### 3. Add the URL to `config.js`
+
+Open `config.js` and replace the placeholder:
+
+```js
+SHEET_URL: "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/pub?gid=0&single=true&output=csv",
+```
+
+### 4. Deploy
+
+Upload both `index.html` and `config.js` to the **same folder** on your web host. Any static hosting works — GitHub Pages, Netlify, a school or league website, etc.
+
+---
+
+## How It Works
+
+1. On page load, the app fetches the published CSV from Google Sheets
+2. Only rows with `Active = TRUE` appear in the dropdown
+3. When a user selects a tournament and clicks **View Rules**, the rule cards populate below
+4. If a **Rules URL** is provided, a button linking to the official rules document appears at the bottom
+5. If no Rules URL is set for a tournament, that button is hidden automatically
+
+---
+
+## Updating Rules
+
+Since the page reads live from Google Sheets, keeping rules up to date is simple:
+
+- **Edit a rule** — update the cell in the sheet. Changes appear on the next page load.
+- **Add a tournament** — add a new row and set Active to `TRUE`.
+- **Deactivate a tournament** — set Active to `FALSE` (or delete the row). It will no longer appear in the dropdown.
+- **No code changes needed** for any of the above.
+
+---
+
+## Previewing Without a Sheet
+
+Open `mockup.html` in any browser. It uses hardcoded sample data and does not require a Google Sheet or internet connection. Use it to preview layout changes or share with others before the sheet is ready.
+
+---
+
+## Troubleshooting
+
+**Dropdown says "Loading tournaments…" and never updates**
+- Check that the URL in `config.js` is correct and was published as CSV (not HTML)
+- Republish the sheet — sometimes the publish step needs to be repeated after changes
+- Open the URL directly in a browser to verify it returns raw CSV text
+
+**My edits to the sheet aren't showing up**
+- Google's publishing cache can take a few minutes to refresh
+- Hard-refresh the page (`Ctrl+Shift+R` / `Cmd+Shift+R`) to bypass the browser cache
+
+**The page works locally but not when hosted**
+- Make sure `config.js` is in the same folder as `index.html` on your server
+- Confirm your host serves `.js` files (virtually all do)
+
+**A tournament isn't appearing in the dropdown**
+- Verify the Active column for that row contains exactly `TRUE`, `yes`, or `1`
+- Check that the row isn't empty in the Tournament column
