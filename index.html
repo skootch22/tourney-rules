@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tournament Rules</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --navy:    #0a1628;
+      --navy2:   #112240;
+      --green:   #1db954;
+      --green2:  #17a348;
+      --gold:    #f5a623;
+      --red:     #e03e3e;
+      --light:   #e8edf5;
+      --muted:   #8899b0;
+      --card-bg: #162033;
+      --border:  #1e3054;
+      --radius:  10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--navy);
+      color: var(--light);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0d1e3a 0%, #0a1628 60%, #0f2a1a 100%);
+      border-bottom: 3px solid var(--green);
+      padding: 1.4rem 1.2rem 1.2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 18px,
+        rgba(255,255,255,.018) 18px,
+        rgba(255,255,255,.018) 19px
+      );
+    }
+    .logo-icon {
+      font-size: 2.2rem;
+      display: block;
+      line-height: 1;
+      margin-bottom: .3rem;
+    }
+    header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(1.7rem, 6vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1;
+    }
+    header h1 span { color: var(--green); }
+    header p {
+      margin-top: .35rem;
+      color: var(--muted);
+      font-size: .85rem;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    /* ── SELECTOR PANEL ── */
+    .selector-wrap {
+      max-width: 620px;
+      margin: 1.8rem auto 0;
+      padding: 0 1rem;
+    }
+    .selector-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.2rem;
+    }
+    .selector-card label {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: .5rem;
+    }
+    .select-row {
+      display: flex;
+      gap: .7rem;
+      align-items: stretch;
+    }
+    select {
+      flex: 1;
+      background: var(--navy);
+      color: var(--light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .75rem 1rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: .95rem;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238899b0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+    select:focus { outline: none; border-color: var(--green); }
+    select option { background: var(--navy2); }
+
+    .btn-view {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .75rem 1.4rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-view:hover  { background: var(--green2); }
+    .btn-view:active { transform: scale(.97); }
+
+    /* ── STATUS ── */
+    .status {
+      text-align: center;
+      padding: 1.2rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+    .status.error { color: var(--red); }
+
+    /* ── RULES PANEL ── */
+    #rules-panel {
+      max-width: 680px;
+      margin: 1.6rem auto 0;
+      padding: 0 1rem;
+      display: none;
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(14px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    /* tournament title bar */
+    .t-title-bar {
+      background: linear-gradient(90deg, var(--green2), var(--green));
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 1rem 1.2rem .9rem;
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+    }
+    .t-title-bar .icon { font-size: 1.5rem; flex-shrink: 0; }
+    .t-title-bar h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(1.2rem, 5vw, 1.7rem);
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .t-title-bar .location {
+      font-size: .8rem;
+      color: rgba(255,255,255,.75);
+      margin-top: .2rem;
+      font-weight: 500;
+    }
+
+    /* quick-stats row */
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--navy2);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .stat-cell {
+      padding: .85rem .7rem;
+      text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell .s-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display: block;
+      margin-bottom: .25rem;
+    }
+    .stat-cell .s-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-cell .s-sub {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: .15rem;
+    }
+
+    /* rule cards */
+    .rules-body {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: .85rem;
+    }
+
+    .rule-card {
+      background: var(--navy2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .rule-card-head {
+      display: flex;
+      align-items: center;
+      gap: .55rem;
+      padding: .6rem .9rem;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid var(--border);
+    }
+    .rule-card-head .rc-icon { font-size: 1rem; }
+    .rule-card-head .rc-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rule-card-body {
+      padding: .75rem .9rem;
+      font-size: .92rem;
+      line-height: 1.6;
+      color: var(--light);
+    }
+    /* allow HTML content */
+    .rule-card-body ul  { padding-left: 1.3rem; margin: .3rem 0; }
+    .rule-card-body li  { margin: .2rem 0; }
+    .rule-card-body p   { margin: .3rem 0; }
+    .rule-card-body b,
+    .rule-card-body strong { color: var(--gold); }
+
+    /* two-col layout for simple text fields on wider screens */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .85rem;
+    }
+    @media (max-width: 480px) {
+      .two-col { grid-template-columns: 1fr; }
+      .quick-stats { grid-template-columns: repeat(3,1fr); } /* keep 3-col on phones */
+    }
+
+    /* badge for simple text */
+    .badge-value {
+      display: inline-block;
+      background: rgba(245,166,35,.12);
+      color: var(--gold);
+      border: 1px solid rgba(245,166,35,.3);
+      border-radius: 5px;
+      padding: .2rem .6rem;
+      font-size: .88rem;
+      font-weight: 600;
+    }
+
+    /* ── OFFICIAL RULES LINK ── */
+    .rules-link-wrap { text-align: center; padding: .25rem 0 .1rem; }
+    .btn-official {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: transparent;
+      color: var(--green);
+      border: 1.5px solid var(--green);
+      border-radius: var(--radius);
+      padding: .65rem 1.3rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .95rem; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .btn-official:hover { background: var(--green); color: #fff; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      color: var(--border);
+      font-size: .75rem;
+      margin-top: 3rem;
+      letter-spacing: .07em;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <span class="logo-icon">⚾</span>
+  <h1>Tournament <span>Rules</span></h1>
+  <p>Official Field Guide</p>
+</header>
+
+<div class="selector-wrap">
+  <div class="selector-card">
+    <label for="tournament-select">Select a Tournament</label>
+    <div class="select-row">
+      <select id="tournament-select">
+        <option value="">— Loading tournaments… —</option>
+      </select>
+      <button class="btn-view" id="view-btn">View Rules</button>
+    </div>
+  </div>
+  <div id="status" class="status"></div>
+</div>
+
+<div id="rules-panel">
+  <div class="t-title-bar">
+    <span class="icon">🏆</span>
+    <div>
+      <h2 id="r-name"></h2>
+      <div class="location" id="r-location"></div>
+    </div>
+  </div>
+
+  <div class="quick-stats">
+    <div class="stat-cell">
+      <span class="s-label">Innings</span>
+      <div class="s-value" id="r-innings">—</div>
+      <div class="s-sub">regulation</div>
+    </div>
+    <div class="stat-cell">
+      <span class="s-label">Time Limit</span>
+      <div class="s-value" id="r-timelimit" style="font-size:1.1rem; padding-top:.15rem;">—</div>
+    </div>
+    <div class="stat-cell">
+      <span class="s-label">Balks</span>
+      <div class="s-value" id="r-balks" style="font-size:1.1rem; padding-top:.15rem;">—</div>
+    </div>
+  </div>
+
+  <div class="rules-body">
+
+    <div class="two-col">
+      <div class="rule-card">
+        <div class="rule-card-head">
+          <span class="rc-icon">🏃</span>
+          <span class="rc-label">Courtesy Runner</span>
+        </div>
+        <div class="rule-card-body" id="r-courtesy"></div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-card-head">
+          <span class="rc-icon">⚡</span>
+          <span class="rc-label">Mercy Rule</span>
+        </div>
+        <div class="rule-card-body" id="r-mercy"></div>
+      </div>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-card-head">
+        <span class="rc-icon">⚾</span>
+        <span class="rc-label">Pitching Limits</span>
+      </div>
+      <div class="rule-card-body" id="r-pitching"></div>
+    </div>
+
+    <div class="two-col">
+      <div class="rule-card">
+        <div class="rule-card-head">
+          <span class="rc-icon">🔄</span>
+          <span class="rc-label">Extra Innings</span>
+        </div>
+        <div class="rule-card-body" id="r-extra"></div>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-card-head">
+          <span class="rc-icon">🏅</span>
+          <span class="rc-label">Tie Breaker</span>
+        </div>
+        <div class="rule-card-body" id="r-tiebreaker"></div>
+      </div>
+    </div>
+
+    <div class="rules-link-wrap" id="r-rules-wrap" style="display:none;">
+      <a id="r-rules-url" class="btn-official" href="#" target="_blank" rel="noopener">
+        📄 View Official Rules
+      </a>
+    </div>
+
+  </div><!-- /rules-body -->
+</div><!-- /rules-panel -->
+
+<footer><p>Data sourced from Google Sheets • refresh page to reload</p></footer>
+
+<!-- Config (edit SHEET_URL here) -->
+<script src="config.js"></script>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────
+let tournaments = [];
+
+async function loadSheet() {
+  setStatus('Loading tournament data…');
+  try {
+    const res = await fetch(CONFIG.SHEET_URL);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const csv  = await res.text();
+    const rows = parseCSV(csv);
+
+    if (rows.length < 2) throw new Error('Sheet appears empty or has no data rows.');
+
+    const C = CONFIG.COLUMNS;
+    // Skip header row (index 0)
+    tournaments = rows.slice(1)
+      .filter(r => {
+        const active = (r[C.ACTIVE] || '').trim().toLowerCase();
+        return active === 'true' || active === 'yes' || active === '1';
+      })
+      .map(r => ({
+        name:           (r[C.TOURNAMENT]      || '').trim(),
+        location:       (r[C.LOCATION]        || '').trim(),
+        timeLimit:      (r[C.TIME_LIMIT]      || '').trim(),
+        innings:        (r[C.INNINGS]         || '').trim(),
+        mercyRule:      (r[C.MERCY_RULE]      || '').trim(),
+        pitchingLimits: (r[C.PITCHING_LIMITS] || '').trim(),
+        balks:          (r[C.BALKS]           || '').trim(),
+        courtesyRunner: (r[C.COURTESY_RUNNER] || '').trim(),
+        extraInning:    (r[C.EXTRA_INNING]    || '').trim(),
+        tieBreaker:     (r[C.TIE_BREAKER]     || '').trim(),
+        rulesUrl:       (r[C.RULES_URL]       || '').trim(),
+      }))
+      .filter(t => t.name);
+
+    populateDropdown();
+    setStatus('');
+  } catch (err) {
+    setStatus('⚠ Could not load sheet data. Check config.js SHEET_URL. (' + err.message + ')', true);
+    console.error(err);
+  }
+}
+
+function parseCSV(text) {
+  const rows = [];
+  const lines = text.split(/\r?\n/);
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    rows.push(parseCSVLine(line));
+  }
+  return rows;
+}
+
+function parseCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQ && line[i+1] === '"') { cur += '"'; i++; }
+      else inQ = !inQ;
+    } else if (ch === ',' && !inQ) {
+      result.push(cur); cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  result.push(cur);
+  return result;
+}
+
+// ── UI ────────────────────────────────────────────────────────
+function populateDropdown() {
+  const sel = document.getElementById('tournament-select');
+  sel.innerHTML = '';
+  if (!tournaments.length) {
+    sel.innerHTML = '<option value="">— No active tournaments —</option>';
+    return;
+  }
+  const placeholder = document.createElement('option');
+  placeholder.value = '';
+  placeholder.textContent = '— Choose a tournament —';
+  sel.appendChild(placeholder);
+  tournaments.forEach((t, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = t.name;
+    sel.appendChild(opt);
+  });
+}
+
+function setStatus(msg, isError = false) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'status' + (isError ? ' error' : '');
+}
+
+function showRules(t) {
+  // helpers
+  const setText  = (id, val) => document.getElementById(id).textContent = val || '—';
+  const setHTML  = (id, val) => document.getElementById(id).innerHTML   = val || '<em style="color:var(--muted)">Not specified</em>';
+
+  setText('r-name',      t.name);
+  setText('r-location',  t.location ? '📍 ' + t.location : '');
+  setText('r-innings',   t.innings);
+  setText('r-timelimit', t.timeLimit);
+  setText('r-balks',     t.balks);
+
+  // Courtesy runner — plain text, wrap in badge
+  const crEl = document.getElementById('r-courtesy');
+  crEl.innerHTML = t.courtesyRunner
+    ? '<span class="badge-value">' + escapeHTML(t.courtesyRunner) + '</span>'
+    : '<em style="color:var(--muted)">Not specified</em>';
+
+  setHTML('r-mercy',      t.mercyRule);
+  setHTML('r-pitching',   t.pitchingLimits);
+  setHTML('r-extra',      t.extraInning);
+  setHTML('r-tiebreaker', t.tieBreaker);
+
+  // Official rules URL
+  const rulesWrap = document.getElementById('r-rules-wrap');
+  if (t.rulesUrl) {
+    document.getElementById('r-rules-url').href = t.rulesUrl;
+    rulesWrap.style.display = 'block';
+  } else {
+    rulesWrap.style.display = 'none';
+  }
+
+  const panel = document.getElementById('rules-panel');
+  panel.style.display = 'block';
+  // re-trigger animation
+  panel.style.animation = 'none';
+  panel.offsetHeight; // reflow
+  panel.style.animation = '';
+
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function escapeHTML(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('view-btn').addEventListener('click', () => {
+  const sel = document.getElementById('tournament-select');
+  const idx = sel.value;
+  if (idx === '' || !tournaments[idx]) {
+    setStatus('Please select a tournament first.', true);
+    return;
+  }
+  setStatus('');
+  showRules(tournaments[idx]);
+});
+
+// ── INIT ──────────────────────────────────────────────────────
+loadSheet();
+</script>
+</body>
+</html>
