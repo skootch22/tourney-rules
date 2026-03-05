@@ -99,29 +99,61 @@
       color: var(--muted);
       margin-bottom: .5rem;
     }
-    .select-row {
-      display: flex;
-      gap: .7rem;
-      align-items: stretch;
-    }
-    select {
-      flex: 1;
+    .select-row { display: flex; gap: .7rem; align-items: flex-start; flex-wrap: wrap; }
+    .btn-view { width: 100%; }
+    @media (min-width: 420px) { .btn-view { width: auto; } }
+
+    /* Custom dropdown */
+    .custom-select-wrap { flex: 1; position: relative; min-width: 0; }
+    .custom-select-btn {
+      width: 100%;
       background: var(--navy);
       color: var(--light);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: .75rem 1rem;
+      padding: .6rem 2.2rem .6rem 1rem;
       font-family: 'Barlow', sans-serif;
       font-size: .95rem;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238899b0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 1rem center;
       cursor: pointer;
+      text-align: left;
       transition: border-color .2s;
+      position: relative;
     }
-    select:focus { outline: none; border-color: var(--green); }
-    select option { background: var(--navy2); }
+    .custom-select-btn::after {
+      content: '';
+      position: absolute;
+      right: 1rem; top: 50%; transform: translateY(-50%);
+      width: 12px; height: 8px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238899b0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center;
+    }
+    .custom-select-btn:focus { outline: none; border-color: var(--green); }
+    .custom-select-btn .cs-name { display: block; line-height: 1.2; }
+    .custom-select-btn .cs-loc  { display: block; font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .custom-select-btn.placeholder { color: var(--muted); }
+
+    .custom-select-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--navy2);
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      z-index: 100;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .custom-select-dropdown.open { display: block; }
+    .cs-option {
+      padding: .65rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .cs-option:last-child { border-bottom: none; }
+    .cs-option:hover { background: rgba(29,185,84,.1); }
+    .cs-option .cs-name { display: block; font-size: .95rem; color: var(--light); line-height: 1.2; }
+    .cs-option .cs-loc  { display: block; font-size: .75rem; color: var(--muted); margin-top: .15rem; }
 
     .btn-view {
       background: var(--green);
@@ -334,11 +366,14 @@
 
 <div class="selector-wrap">
   <div class="selector-card">
-    <label for="tournament-select">Select a Tournament</label>
+    <label for="custom-select-btn">Select a Tournament</label>
     <div class="select-row">
-      <select id="tournament-select">
-        <option value="">— Loading tournaments… —</option>
-      </select>
+      <div class="custom-select-wrap" id="custom-select-wrap">
+        <button class="custom-select-btn placeholder" id="custom-select-btn" type="button">
+          <span class="cs-name">— Loading tournaments… —</span>
+        </button>
+        <div class="custom-select-dropdown" id="custom-select-dropdown"></div>
+      </div>
       <button class="btn-view" id="view-btn">View Rules</button>
     </div>
   </div>
@@ -503,22 +538,37 @@ function parseCSVLine(line) {
 }
 
 // ── UI ────────────────────────────────────────────────────────
+let selectedIdx = null;
+const csBtn      = document.getElementById('custom-select-btn');
+const csDropdown = document.getElementById('custom-select-dropdown');
+
+csBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  csDropdown.classList.toggle('open');
+});
+document.addEventListener('click', () => csDropdown.classList.remove('open'));
+
 function populateDropdown() {
-  const sel = document.getElementById('tournament-select');
-  sel.innerHTML = '';
+  csDropdown.innerHTML = '';
   if (!tournaments.length) {
-    sel.innerHTML = '<option value="">— No active tournaments —</option>';
+    csBtn.innerHTML = '<span class="cs-name">— No active tournaments —</span>';
     return;
   }
-  const placeholder = document.createElement('option');
-  placeholder.value = '';
-  placeholder.textContent = '— Choose a tournament —';
-  sel.appendChild(placeholder);
+  csBtn.innerHTML = '<span class="cs-name">— Choose a tournament —</span>';
+  csBtn.classList.add('placeholder');
+  selectedIdx = null;
+
   tournaments.forEach((t, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = t.name;
-    sel.appendChild(opt);
+    const opt = document.createElement('div');
+    opt.className = 'cs-option';
+    opt.innerHTML = `<span class="cs-name">${escapeHTML(t.name)}</span>${t.location ? `<span class="cs-loc">📍 ${escapeHTML(t.location)}</span>` : ''}`;
+    opt.addEventListener('click', () => {
+      selectedIdx = i;
+      csBtn.innerHTML = `<span class="cs-name">${escapeHTML(t.name)}</span>${t.location ? `<span class="cs-loc">📍 ${escapeHTML(t.location)}</span>` : ''}`;
+      csBtn.classList.remove('placeholder');
+      csDropdown.classList.remove('open');
+    });
+    csDropdown.appendChild(opt);
   });
 }
 
@@ -574,14 +624,12 @@ function escapeHTML(str) {
 }
 
 document.getElementById('view-btn').addEventListener('click', () => {
-  const sel = document.getElementById('tournament-select');
-  const idx = sel.value;
-  if (idx === '' || !tournaments[idx]) {
+  if (selectedIdx === null || !tournaments[selectedIdx]) {
     setStatus('Please select a tournament first.', true);
     return;
   }
   setStatus('');
-  showRules(tournaments[idx]);
+  showRules(tournaments[selectedIdx]);
 });
 
 // ── INIT ──────────────────────────────────────────────────────
