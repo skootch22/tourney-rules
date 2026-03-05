@@ -12,18 +12,22 @@ const CONFIG = {
   SHEET_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vSHjqLhfHnbzQ5R3ZakS-viAWqTx5ACd1j9ivZ9XSswZG2Y2IU25Yy9viuDV3chJERQqA8c6up4YquS/pub?gid=0&single=true&output=csv",
 
   // Column order must match your sheet exactly (0-indexed)
-  COLUMNS: {
-    ACTIVE:          0,
-    TOURNAMENT:      1,
-    LOCATION:        2,
-    TIME_LIMIT:      3,
-    INNINGS:         4,
-    MERCY_RULE:      5,
-    PITCHING_LIMITS: 6,
-    BALKS:           7,
-    COURTESY_RUNNER: 8,
-    EXTRA_INNING:    9,
-    TIE_BREAKER:     10,
-    RULES_URL:       11,
+COLUMNS: {
+    ACTIVE:          "Active",
+    TOURNAMENT:      "Tournament",
+    LOCATION:        "Location",
+    TIME_LIMIT:      "Time Limit",
+    INNINGS:         "Innings",
+    MERCY_RULE:      "Mercy Rule",
+    PITCHING_LIMITS: "Pitching Limits",
+    BALKS:           "Balks",
+    COURTESY_RUNNER: "Courtesy Runner",
+    EXTRA_INNING:    "Extra Inning",
+    TIE_BREAKER:     "Tie Breaker",
+    RULES_URL:       "Rules URL",
+    NOTES:           "Notes",
+    SORT_ORDER:      "Sort Order",
+    START_DATE:      "Start Date",
+    END_DATE:        "End Date",
   }
 };

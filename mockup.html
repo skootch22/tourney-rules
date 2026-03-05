@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tournament Rules – Mockup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --navy:    #0a1628;
+      --navy2:   #112240;
+      --green:   #1db954;
+      --green2:  #17a348;
+      --gold:    #f5a623;
+      --red:     #e03e3e;
+      --light:   #e8edf5;
+      --muted:   #8899b0;
+      --card-bg: #162033;
+      --border:  #1e3054;
+      --radius:  10px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--navy);
+      color: var(--light);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 3rem;
+    }
+
+    /* ── MOCKUP BANNER ── */
+    .mockup-banner {
+      background: var(--gold);
+      color: #0a1628;
+      text-align: center;
+      padding: .45rem 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0d1e3a 0%, #0a1628 60%, #0f2a1a 100%);
+      border-bottom: 3px solid var(--green);
+      padding: 1.4rem 1.2rem 1.2rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        -45deg, transparent, transparent 18px,
+        rgba(255,255,255,.018) 18px, rgba(255,255,255,.018) 19px
+      );
+    }
+    .logo-icon { font-size: 2.2rem; display: block; line-height: 1; margin-bottom: .3rem; }
+    header h1 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(1.7rem, 6vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: #fff;
+      line-height: 1;
+    }
+    header h1 span { color: var(--green); }
+    header p { margin-top: .35rem; color: var(--muted); font-size: .85rem; letter-spacing: .08em; text-transform: uppercase; }
+
+    /* ── SELECTOR PANEL ── */
+    .selector-wrap { max-width: 620px; margin: 1.8rem auto 0; padding: 0 1rem; }
+    .selector-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem 1.2rem;
+    }
+    .selector-card label {
+      display: block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .78rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: .5rem;
+    }
+    .select-row { display: flex; gap: .7rem; align-items: flex-start; flex-wrap: wrap; }
+    .btn-view { width: 100%; }
+    @media (min-width: 420px) { .btn-view { width: auto; } }
+
+    /* Custom dropdown */
+    .custom-select-wrap { flex: 1; position: relative; min-width: 0; }
+    .custom-select-btn {
+      width: 100%;
+      background: var(--navy);
+      color: var(--light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .6rem 2.2rem .6rem 1rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: .95rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .2s;
+      position: relative;
+    }
+    .custom-select-btn::after {
+      content: '';
+      position: absolute;
+      right: 1rem; top: 50%; transform: translateY(-50%);
+      width: 12px; height: 8px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238899b0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center;
+    }
+    .custom-select-btn:focus { outline: none; border-color: var(--green); }
+    .custom-select-btn .cs-name { display: block; line-height: 1.2; }
+    .custom-select-btn .cs-loc  { display: block; font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    .custom-select-btn.placeholder { color: var(--muted); }
+
+    .custom-select-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0; right: 0;
+      background: var(--navy2);
+      border: 1px solid var(--green);
+      border-radius: var(--radius);
+      z-index: 100;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4);
+    }
+    .custom-select-dropdown.open { display: block; }
+    .cs-option {
+      padding: .65rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+    }
+    .cs-option:last-child { border-bottom: none; }
+    .cs-option:hover { background: rgba(29,185,84,.1); }
+    .cs-option .cs-name { display: block; font-size: .95rem; color: var(--light); line-height: 1.2; }
+    .cs-option .cs-loc  { display: block; font-size: .75rem; color: var(--muted); margin-top: .15rem; }
+    select {
+      flex: 1;
+      background: var(--navy);
+      color: var(--light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .75rem 1rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: .95rem;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238899b0' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      cursor: pointer;
+    }
+    select:focus { outline: none; border-color: var(--green); }
+    select option { background: var(--navy2); }
+
+    .btn-view {
+      background: var(--green);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .75rem 1.4rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      white-space: nowrap;
+    }
+    .btn-view:hover  { background: var(--green2); }
+    .btn-view:active { transform: scale(.97); }
+
+    /* ── RULES PANEL ── */
+    #rules-panel {
+      max-width: 680px;
+      margin: 1.6rem auto 0;
+      padding: 0 1rem;
+      animation: fadeUp .35s ease both;
+    }
+    @keyframes fadeUp {
+      from { opacity:0; transform: translateY(14px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+
+    .t-title-bar {
+      background: linear-gradient(90deg, var(--green2), var(--green));
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 1rem 1.2rem .9rem;
+      display: flex; align-items: center; gap: .8rem;
+    }
+    .t-title-bar .icon { font-size: 1.5rem; flex-shrink: 0; }
+    .t-title-bar h2 {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: clamp(1.2rem, 5vw, 1.7rem);
+      font-weight: 800; letter-spacing: .04em;
+      text-transform: uppercase; color: #fff; line-height: 1.1;
+    }
+    .t-title-bar .location { font-size: .8rem; color: rgba(255,255,255,.75); margin-top: .2rem; font-weight: 500; }
+    .t-title-bar .t-dates {
+      font-size: .8rem; color: rgba(255,255,255,.9);
+      margin-top: .25rem; font-weight: 600;
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .t-title-bar .t-dates .date-sep { color: rgba(255,255,255,.4); font-weight: 400; }
+
+    .quick-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--navy2);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+    }
+    .stat-cell { padding: .85rem .7rem; text-align: center; border-right: 1px solid var(--border); }
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell .s-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); display: block; margin-bottom: .25rem;
+    }
+    .stat-cell .s-value {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--gold); line-height: 1;
+    }
+    .stat-cell .s-sub { font-size: .72rem; color: var(--muted); margin-top: .15rem; }
+
+    .rules-body {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 var(--radius) var(--radius);
+      padding: 1rem;
+      display: flex; flex-direction: column; gap: .85rem;
+    }
+
+    .rule-card { background: var(--navy2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .rule-card-head {
+      display: flex; align-items: center; gap: .55rem;
+      padding: .6rem .9rem;
+      background: rgba(255,255,255,.04);
+      border-bottom: 1px solid var(--border);
+    }
+    .rule-card-head .rc-icon { font-size: 1rem; }
+    .rule-card-head .rc-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .rule-card-body {
+      padding: .75rem .9rem;
+      font-size: .92rem; line-height: 1.6;
+      color: var(--light);
+    }
+    .rule-card-body ul  { padding-left: 1.3rem; margin: .3rem 0; }
+    .rule-card-body li  { margin: .2rem 0; }
+    .rule-card-body p   { margin: .3rem 0; }
+    .rule-card-body b,
+    .rule-card-body strong { color: var(--gold); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    @media (max-width: 480px) { .two-col { grid-template-columns: 1fr; } }
+
+    .badge-value {
+      display: inline-block;
+      background: rgba(245,166,35,.12);
+      color: var(--gold);
+      border: 1px solid rgba(245,166,35,.3);
+      border-radius: 5px;
+      padding: .2rem .6rem;
+      font-size: .88rem; font-weight: 600;
+    }
+
+    .rules-link-wrap { text-align: center; padding: .25rem 0 .1rem; }
+    .btn-official {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: transparent;
+      color: var(--green);
+      border: 1.5px solid var(--green);
+      border-radius: var(--radius);
+      padding: .65rem 1.3rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .95rem; font-weight: 700;
+      letter-spacing: .07em; text-transform: uppercase;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+    }
+    .btn-official:hover { background: var(--green); color: #fff; }
+
+    footer { text-align: center; color: var(--border); font-size: .75rem; margin-top: 3rem; letter-spacing: .07em; }
+  </style>
+</head>
+<body>
+
+<div class="mockup-banner">⚠ Mockup — Sample Data Only — Not connected to a live sheet</div>
+
+<header>
+  <span class="logo-icon">⚾</span>
+  <h1>Tournament <span>Rules</span></h1>
+  <p>Official Field Guide</p>
+</header>
+
+<div class="selector-wrap">
+  <div class="selector-card">
+    <label for="tournament-select">Select a Tournament</label>
+    <div class="select-row">
+      <div class="custom-select-wrap" id="custom-select-wrap">
+        <button class="custom-select-btn placeholder" id="custom-select-btn" type="button">
+          <span class="cs-name">— Choose a tournament —</span>
+        </button>
+        <div class="custom-select-dropdown" id="custom-select-dropdown"></div>
+      </div>
+      <button class="btn-view" id="view-btn">View Rules</button>
+    </div>
+  </div>
+</div>
+
+<div id="rules-panel" style="display:none;">
+  <div class="t-title-bar">
+    <span class="icon">🏆</span>
+    <div>
+      <h2 id="r-name"></h2>
+      <div class="location" id="r-location"></div>
+      <div class="t-dates" id="r-dates" style="display:none;"></div>
+    </div>
+  </div>
+
+  <div class="quick-stats">
+    <div class="stat-cell">
+      <span class="s-label">Innings</span>
+      <div class="s-value" id="r-innings">—</div>
+      <div class="s-sub">regulation</div>
+    </div>
+    <div class="stat-cell">
+      <span class="s-label">Time Limit</span>
+      <div class="s-value" id="r-timelimit" style="font-size:1.1rem;padding-top:.15rem;">—</div>
+    </div>
+    <div class="stat-cell">
+      <span class="s-label">Balks</span>
+      <div class="s-value" id="r-balks" style="font-size:1.1rem;padding-top:.15rem;">—</div>
+    </div>
+  </div>
+
+  <div class="rules-body">
+    <div class="two-col">
+      <div class="rule-card">
+        <div class="rule-card-head"><span class="rc-icon">🏃</span><span class="rc-label">Courtesy Runner</span></div>
+        <div class="rule-card-body" id="r-courtesy"></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-card-head"><span class="rc-icon">⚡</span><span class="rc-label">Mercy Rule</span></div>
+        <div class="rule-card-body" id="r-mercy"></div>
+      </div>
+    </div>
+    <div class="rule-card">
+      <div class="rule-card-head"><span class="rc-icon">⚾</span><span class="rc-label">Pitching Limits</span></div>
+      <div class="rule-card-body" id="r-pitching"></div>
+    </div>
+    <div class="two-col">
+      <div class="rule-card">
+        <div class="rule-card-head"><span class="rc-icon">🔄</span><span class="rc-label">Extra Innings</span></div>
+        <div class="rule-card-body" id="r-extra"></div>
+      </div>
+      <div class="rule-card">
+        <div class="rule-card-head"><span class="rc-icon">🏅</span><span class="rc-label">Tie Breaker</span></div>
+        <div class="rule-card-body" id="r-tiebreaker"></div>
+      </div>
+    </div>
+
+    <div class="rule-card" id="r-notes-card" style="display:none;">
+      <div class="rule-card-head"><span class="rc-icon">📝</span><span class="rc-label">Notes</span></div>
+      <div class="rule-card-body" id="r-notes"></div>
+    </div>
+
+    <div class="rules-link-wrap" id="r-rules-wrap" style="display:none;">
+      <a id="r-rules-url" class="btn-official" href="#" target="_blank" rel="noopener">
+        📄 View Official Rules
+      </a>
+    </div>
+  </div>
+</div>
+
+<script>
+const SAMPLE = [
+  {
+    name:           "Spring Classic Invitational",
+    location:       "Riverside Sports Complex, Springfield",
+    innings:        "6",
+    timeLimit:      "1:45",
+    balks:          "Enforced",
+    courtesyRunner: "1 per player per game",
+    mercyRule:      "<p><strong>15 runs</strong> after 3 innings<br><strong>10 runs</strong> after 4 innings<br><strong>8 runs</strong> after 5 innings</p>",
+    pitchingLimits: "<ul><li><strong>9U–10U:</strong> 6 innings per day, 8 per tournament</li><li><strong>11U–12U:</strong> 7 innings per day, 10 per tournament</li><li>1 day rest after 4+ innings pitched</li><li>Catchers limited to 3 innings pitching same day</li></ul>",
+    extraInning:    "<p>International tiebreaker rule: last batted out begins on <strong>2nd base</strong>.</p>",
+    tieBreaker:     "<p>Pool play ties broken by:<br>1. Head-to-head record<br>2. Run differential (max +8 per game)<br>3. Coin flip</p>",
+    rulesUrl:       "https://www.example.com/spring-classic-rules.pdf",
+    notes:          "<p>All disputes must be reported to the tournament director within <strong>15 minutes</strong> of the game's end.</p><ul><li>No protests accepted after bracket play begins</li><li>Coaches must have lineup cards ready 10 min before first pitch</li></ul>",
+    startDate:      "June 6, 2025",
+    endDate:        "June 8, 2025",
+  },
+  {
+    name:           "Summer Slam Championship",
+    location:       "Eagle Field Athletic Park, Maplewood",
+    innings:        "7",
+    timeLimit:      "2:00",
+    balks:          "Warning first",
+    courtesyRunner: "Pitcher & catcher only",
+    mercyRule:      "<p><strong>10 runs</strong> after 5 innings (championship game: no mercy rule)</p>",
+    pitchingLimits: "<ul><li>Max <strong>85 pitches</strong> per day</li><li>Max <strong>150 pitches</strong> per tournament</li><li>Required rest based on pitch count:<br>&nbsp;&nbsp;66–85 pitches = 2 days rest<br>&nbsp;&nbsp;46–65 pitches = 1 day rest</li></ul>",
+    extraInning:    "<p>Sudden death from inning 8 onward. Runner placed on <strong>2nd base</strong>, batting order continues.</p>",
+    tieBreaker:     "<p>Bracket ties resolved by run differential across all games, capped at <strong>+10 per game</strong>. If still tied, higher seed advances.</p>",
+    rulesUrl:       "",
+    notes:          "",
+    startDate:      "July 19, 2025",
+    endDate:        "July 20, 2025",
+  },
+  {
+    name:           "Fall Finale Open",
+    location:       "Sunset Diamond Complex, Lakeville",
+    innings:        "6",
+    timeLimit:      "1:30",
+    balks:          "Not enforced",
+    courtesyRunner: "Any player, once per inning",
+    mercyRule:      "<p><strong>12 runs</strong> after 4 innings<br><strong>8 runs</strong> after 5 innings</p>",
+    pitchingLimits: "<ul><li>Innings-based limits only</li><li><strong>6 innings</strong> max per day</li><li><strong>9 innings</strong> max per tournament</li><li>No same-day catcher restriction</li></ul>",
+    extraInning:    "<p>No extra innings in pool play — game ends in tie. Bracket play uses <strong>international tiebreaker</strong> from inning 7.</p>",
+    tieBreaker:     "<p>Ties in pool play stand. Bracket seeding by:<br>1. Win %<br>2. Runs allowed<br>3. Coin flip</p>",
+    rulesUrl:       "https://www.example.com/fall-finale-rules.pdf",
+    notes:          "<p>Concession stand open from <strong>7am–5pm</strong> daily. Cash only.</p>",
+    startDate:      "September 13, 2025",
+    endDate:        "September 13, 2025",
+  },
+];
+
+let selectedIdx = null;
+
+// Sort: start date first, fall back to sortOrder, then name
+const sorted = [...SAMPLE].sort((a, b) => {
+  const dateA = a.startDate ? new Date(a.startDate) : null;
+  const dateB = b.startDate ? new Date(b.startDate) : null;
+  if (dateA && dateB) return dateA - dateB;
+  if (dateA) return -1;
+  if (dateB) return 1;
+  const orderDiff = (a.sortOrder || 9999) - (b.sortOrder || 9999);
+  if (orderDiff !== 0) return orderDiff;
+  return a.name.localeCompare(b.name);
+});
+
+// Build dropdown options from sorted data
+const dropdown = document.getElementById('custom-select-dropdown');
+const btn      = document.getElementById('custom-select-btn');
+
+sorted.forEach(t => {
+  const origIdx = SAMPLE.indexOf(t);
+  const opt = document.createElement('div');
+  opt.className = 'cs-option';
+  opt.innerHTML = `<span class="cs-name">${t.name}</span>${t.location ? `<span class="cs-loc">📍 ${t.location}</span>` : ''}`;
+  opt.addEventListener('click', () => {
+    selectedIdx = origIdx;
+    btn.innerHTML = `<span class="cs-name">${t.name}</span>${t.location ? `<span class="cs-loc">📍 ${t.location}</span>` : ''}`;
+    btn.classList.remove('placeholder');
+    dropdown.classList.remove('open');
+  });
+  dropdown.appendChild(opt);
+});
+
+// Toggle open/close
+btn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  dropdown.classList.toggle('open');
+});
+document.addEventListener('click', () => dropdown.classList.remove('open'));
+
+document.getElementById('view-btn').addEventListener('click', () => {
+  if (selectedIdx === null) return;
+  const t = SAMPLE[selectedIdx];
+
+  document.getElementById('r-name').textContent     = t.name;
+  document.getElementById('r-location').textContent = '📍 ' + t.location;
+  document.getElementById('r-innings').textContent  = t.innings;
+  document.getElementById('r-timelimit').textContent= t.timeLimit;
+  document.getElementById('r-balks').textContent    = t.balks;
+
+  // Dates
+  const datesEl = document.getElementById('r-dates');
+  if (t.startDate || t.endDate) {
+    if (t.startDate && t.endDate && t.startDate !== t.endDate) {
+      datesEl.innerHTML = `📅 ${t.startDate} <span class="date-sep">→</span> ${t.endDate}`;
+    } else {
+      datesEl.innerHTML = `📅 ${t.startDate || t.endDate}`;
+    }
+    datesEl.style.display = 'flex';
+  } else {
+    datesEl.style.display = 'none';
+  }
+
+  document.getElementById('r-courtesy').innerHTML  =
+    '<span class="badge-value">' + t.courtesyRunner + '</span>';
+  document.getElementById('r-mercy').innerHTML     = t.mercyRule;
+  document.getElementById('r-pitching').innerHTML  = t.pitchingLimits;
+  document.getElementById('r-extra').innerHTML     = t.extraInning;
+  document.getElementById('r-tiebreaker').innerHTML= t.tieBreaker;
+
+  const rulesWrap = document.getElementById('r-rules-wrap');
+  if (t.rulesUrl) {
+    document.getElementById('r-rules-url').href = t.rulesUrl;
+    rulesWrap.style.display = 'block';
+  } else {
+    rulesWrap.style.display = 'none';
+  }
+
+  const notesCard = document.getElementById('r-notes-card');
+  if (t.notes) {
+    document.getElementById('r-notes').innerHTML = t.notes;
+    notesCard.style.display = 'block';
+  } else {
+    notesCard.style.display = 'none';
+  }
+
+  const panel = document.getElementById('rules-panel');
+  panel.style.display = 'block';
+  panel.style.animation = 'none';
+  panel.offsetHeight;
+  panel.style.animation = '';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+</script>
+</body>
+</html>

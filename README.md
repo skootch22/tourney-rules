@@ -18,7 +18,7 @@ A mobile-friendly web page for looking up baseball tournament rules. Data is pul
 
 ### 1. Create your Google Sheet
 
-Set up a sheet with the following columns **in this exact order**. The first row should be a header row (it is skipped automatically).
+Set up a sheet with the following columns. **Column order doesn't matter** — the app finds each column by its header name. The first row must be a header row with these exact names (spelling and capitalization must match).
 
 | Column | Type | Notes |
 |---|---|---|
@@ -34,6 +34,10 @@ Set up a sheet with the following columns **in this exact order**. The first row
 | Extra Inning | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
 | Tie Breaker | HTML | Supports `<ul>`, `<strong>`, `<p>`, etc. |
 | Rules URL | URL | Optional. Link to official rules PDF or page. Leave blank to hide the button. |
+| Notes | HTML | Optional. Anything that doesn't fit elsewhere. Supports `<ul>`, `<strong>`, `<p>`, etc. |
+| Sort Order | Number | Optional. Controls dropdown order (1, 2, 3…). Tournaments without a value appear last. |
+| Start Date | Text | Optional. Tournament start date, e.g. `June 6, 2025`. |
+| End Date | Text | Optional. Tournament end date. If same as start date, only one date is shown. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html
@@ -90,7 +94,10 @@ Open `mockup.html` in any browser. It uses hardcoded sample data and does not re
 
 ## Troubleshooting
 
-**Dropdown says "Loading tournaments…" and never updates**
+**Error says "Missing sheet columns: …"**
+- The app couldn't find one or more expected header names in your sheet's first row
+- Check spelling and capitalization exactly match the names in `config.js` — e.g. `Time Limit` not `time limit` or `TimeLimit`
+- Make sure row 1 of your sheet is the header row, not a blank row or data row
 - Check that the URL in `config.js` is correct and was published as CSV (not HTML)
 - Republish the sheet — sometimes the publish step needs to be repeated after changes
 - Open the URL directly in a browser to verify it returns raw CSV text
