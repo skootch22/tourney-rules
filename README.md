@@ -38,6 +38,8 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | Sort Order | Number | Optional. Controls dropdown order (1, 2, 3…). Tournaments without a value appear last. |
 | Start Date | Text | Optional. Tournament start date, e.g. `June 6, 2025`. |
 | End Date | Text | Optional. Tournament end date. If same as start date, only one date is shown. |
+| Dropped Third Strike | HTML | Optional. Enforced or not, and any nuances. |
+| Stealing Rules | HTML | Optional. What stealing is permitted, any restrictions. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

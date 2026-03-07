@@ -29,5 +29,7 @@ COLUMNS: {
     SORT_ORDER:      "Sort Order",
     START_DATE:      "Start Date",
     END_DATE:        "End Date",
+    DROPPED_THIRD:   "Dropped Third Strike",
+    STEALING:        "Stealing Rules",
   }
 };

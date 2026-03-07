@@ -439,6 +439,23 @@
       </div>
     </div>
 
+    <div class="two-col" id="r-baserunning-row" style="display:none;">
+      <div class="rule-card" id="r-stealing-card" style="display:none;">
+        <div class="rule-card-head">
+          <span class="rc-icon">💨</span>
+          <span class="rc-label">Stealing Rules</span>
+        </div>
+        <div class="rule-card-body" id="r-stealing"></div>
+      </div>
+      <div class="rule-card" id="r-dropped-card" style="display:none;">
+        <div class="rule-card-head">
+          <span class="rc-icon">🤚</span>
+          <span class="rc-label">Dropped Third Strike</span>
+        </div>
+        <div class="rule-card-body" id="r-dropped"></div>
+      </div>
+    </div>
+
     <div class="rule-card">
       <div class="rule-card-head">
         <span class="rc-icon">⚾</span>
@@ -508,7 +525,7 @@ async function loadSheet() {
 
     // Validate required columns exist — Sort Order is optional, exclude from check
     const C = CONFIG.COLUMNS;
-    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE']);
+    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING']);
     const requiredCols = Object.entries(C)
       .filter(([key]) => !optionalCols.has(key))
       .filter(([, name]) => col(name) === -1)
@@ -536,6 +553,8 @@ async function loadSheet() {
         sortOrder:      parseFloat(get(r, C.SORT_ORDER)) || 9999,
         startDate:      get(r, C.START_DATE),
         endDate:        get(r, C.END_DATE),
+        droppedThird:   get(r, C.DROPPED_THIRD),
+        stealing:       get(r, C.STEALING),
       }))
       .filter(t => t.name)
       .sort((a, b) => {
@@ -660,6 +679,24 @@ function showRules(t) {
   setHTML('r-pitching',   t.pitchingLimits);
   setHTML('r-extra',      t.extraInning);
   setHTML('r-tiebreaker', t.tieBreaker);
+
+  // Stealing & Dropped Third Strike (optional)
+  const stealingCard = document.getElementById('r-stealing-card');
+  const droppedCard  = document.getElementById('r-dropped-card');
+  const baserunningRow = document.getElementById('r-baserunning-row');
+  if (t.stealing) {
+    document.getElementById('r-stealing').innerHTML = t.stealing;
+    stealingCard.style.display = 'block';
+  } else {
+    stealingCard.style.display = 'none';
+  }
+  if (t.droppedThird) {
+    document.getElementById('r-dropped').innerHTML = t.droppedThird;
+    droppedCard.style.display = 'block';
+  } else {
+    droppedCard.style.display = 'none';
+  }
+  baserunningRow.style.display = (t.stealing || t.droppedThird) ? 'grid' : 'none';
 
   // Notes
   const notesCard = document.getElementById('r-notes-card');
