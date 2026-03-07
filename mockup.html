@@ -541,7 +541,7 @@ document.getElementById('view-btn').addEventListener('click', () => {
 
   // Field type badge
   const fieldTypeEl = document.getElementById('r-field-type');
-  const fieldIcons  = { turf: '🏟️', grass: '🌿', mixed: '🔀' };
+  const fieldIcons  = { turf: '🟩', grass: '🌿', mixed: '🟩🌿' };
   const fieldLabels = { turf: 'Turf', grass: 'Grass', mixed: 'Mixed' };
   const ft = (t.fieldType || '').toLowerCase();
   if (ft && fieldIcons[ft]) {

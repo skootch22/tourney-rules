@@ -686,7 +686,7 @@ function showRules(t) {
 
   // Field type badge
   const fieldTypeEl = document.getElementById('r-field-type');
-  const fieldIcons = { turf: '🏟️', grass: '🌿', mixed: '🔀' };
+  const fieldIcons = { turf: '🟩', grass: '🌿', mixed: '🟩🌿' };
   const fieldLabels = { turf: 'Turf', grass: 'Grass', mixed: 'Mixed' };
   if (t.fieldType && fieldIcons[t.fieldType]) {
     fieldTypeEl.innerHTML = `<span class="field-type-badge ${t.fieldType}"><span class="ft-icon">${fieldIcons[t.fieldType]}</span>${fieldLabels[t.fieldType]}</span>`;
