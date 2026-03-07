@@ -40,6 +40,7 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | End Date | Text | Optional. Tournament end date. If same as start date, only one date is shown. |
 | Dropped Third Strike | HTML | Optional. Enforced or not, and any nuances. |
 | Stealing Rules | HTML | Optional. What stealing is permitted, any restrictions. |
+| Field Type | Text | Optional. `turf`, `grass`, or `mixed`. Displays as a badge in the header. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

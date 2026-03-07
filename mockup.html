@@ -212,6 +212,19 @@
       display: flex; align-items: center; gap: .4rem;
     }
     .t-title-bar .t-dates .date-sep { color: rgba(255,255,255,.4); font-weight: 400; }
+    .field-type-badge {
+      display: inline-flex; align-items: center; gap: .35rem;
+      margin-top: .3rem;
+      padding: .2rem .65rem .2rem .5rem;
+      border-radius: 20px;
+      font-size: .75rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      width: fit-content;
+    }
+    .field-type-badge.turf  { background: rgba(56,189,248,.15); color: #7dd3fc; border: 1px solid rgba(56,189,248,.3); }
+    .field-type-badge.grass { background: rgba(34,197,94,.15);  color: #86efac; border: 1px solid rgba(34,197,94,.3); }
+    .field-type-badge.mixed { background: rgba(251,191,36,.15); color: #fcd34d; border: 1px solid rgba(251,191,36,.3); }
+    .field-type-badge .ft-icon { font-size: .95rem; line-height: 1; }
 
     .quick-stats {
       display: grid;
@@ -333,6 +346,7 @@
       <h2 id="r-name"></h2>
       <div class="location" id="r-location"></div>
       <div class="t-dates" id="r-dates" style="display:none;"></div>
+      <div id="r-field-type" style="display:none;"></div>
     </div>
   </div>
 
@@ -361,6 +375,17 @@
       <div class="rule-card">
         <div class="rule-card-head"><span class="rc-icon">⚡</span><span class="rc-label">Mercy Rule</span></div>
         <div class="rule-card-body" id="r-mercy"></div>
+      </div>
+    </div>
+
+    <div class="two-col" id="r-baserunning-row" style="display:none;">
+      <div class="rule-card" id="r-stealing-card" style="display:none;">
+        <div class="rule-card-head"><span class="rc-icon">💨</span><span class="rc-label">Stealing Rules</span></div>
+        <div class="rule-card-body" id="r-stealing"></div>
+      </div>
+      <div class="rule-card" id="r-dropped-card" style="display:none;">
+        <div class="rule-card-head"><span class="rc-icon">🤚</span><span class="rc-label">Dropped Third Strike</span></div>
+        <div class="rule-card-body" id="r-dropped"></div>
       </div>
     </div>
     <div class="rule-card">
@@ -408,6 +433,9 @@ const SAMPLE = [
     notes:          "<p>All disputes must be reported to the tournament director within <strong>15 minutes</strong> of the game's end.</p><ul><li>No protests accepted after bracket play begins</li><li>Coaches must have lineup cards ready 10 min before first pitch</li></ul>",
     startDate:      "June 6, 2025",
     endDate:        "June 8, 2025",
+    stealing:       "<p>Stealing allowed from <strong>2nd and 3rd</strong> only. No stealing home. Delayed steal permitted.</p>",
+    droppedThird:   "<p><strong>Enforced.</strong> Batter may attempt to reach first on an uncaught third strike when first base is unoccupied or with two outs.</p>",
+    fieldType:      "turf",
   },
   {
     name:           "Summer Slam Championship",
@@ -424,6 +452,9 @@ const SAMPLE = [
     notes:          "",
     startDate:      "July 19, 2025",
     endDate:        "July 20, 2025",
+    stealing:       "",
+    droppedThird:   "",
+    fieldType:      "grass",
   },
   {
     name:           "Fall Finale Open",
@@ -440,6 +471,9 @@ const SAMPLE = [
     notes:          "<p>Concession stand open from <strong>7am–5pm</strong> daily. Cash only.</p>",
     startDate:      "September 13, 2025",
     endDate:        "September 13, 2025",
+    stealing:       "<p><strong>No stealing.</strong> Runners may advance only on batted balls.</p>",
+    droppedThird:   "",
+    fieldType:      "mixed",
   },
 ];
 
@@ -505,12 +539,42 @@ document.getElementById('view-btn').addEventListener('click', () => {
     datesEl.style.display = 'none';
   }
 
+  // Field type badge
+  const fieldTypeEl = document.getElementById('r-field-type');
+  const fieldIcons  = { turf: '🏟️', grass: '🌿', mixed: '🔀' };
+  const fieldLabels = { turf: 'Turf', grass: 'Grass', mixed: 'Mixed' };
+  const ft = (t.fieldType || '').toLowerCase();
+  if (ft && fieldIcons[ft]) {
+    fieldTypeEl.innerHTML = `<span class="field-type-badge ${ft}"><span class="ft-icon">${fieldIcons[ft]}</span>${fieldLabels[ft]}</span>`;
+    fieldTypeEl.style.display = 'block';
+  } else {
+    fieldTypeEl.style.display = 'none';
+  }
+
   document.getElementById('r-courtesy').innerHTML  =
     '<span class="badge-value">' + t.courtesyRunner + '</span>';
   document.getElementById('r-mercy').innerHTML     = t.mercyRule;
   document.getElementById('r-pitching').innerHTML  = t.pitchingLimits;
   document.getElementById('r-extra').innerHTML     = t.extraInning;
   document.getElementById('r-tiebreaker').innerHTML= t.tieBreaker;
+
+  // Stealing & Dropped Third Strike (optional)
+  const stealingCard   = document.getElementById('r-stealing-card');
+  const droppedCard    = document.getElementById('r-dropped-card');
+  const baserunningRow = document.getElementById('r-baserunning-row');
+  if (t.stealing) {
+    document.getElementById('r-stealing').innerHTML = t.stealing;
+    stealingCard.style.display = 'block';
+  } else {
+    stealingCard.style.display = 'none';
+  }
+  if (t.droppedThird) {
+    document.getElementById('r-dropped').innerHTML = t.droppedThird;
+    droppedCard.style.display = 'block';
+  } else {
+    droppedCard.style.display = 'none';
+  }
+  baserunningRow.style.display = (t.stealing || t.droppedThird) ? 'grid' : 'none';
 
   const rulesWrap = document.getElementById('r-rules-wrap');
   if (t.rulesUrl) {

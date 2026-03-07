@@ -31,5 +31,6 @@ COLUMNS: {
     END_DATE:        "End Date",
     DROPPED_THIRD:   "Dropped Third Strike",
     STEALING:        "Stealing Rules",
+    FIELD_TYPE:      "Field Type",
   }
 };
