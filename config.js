@@ -32,5 +32,6 @@ COLUMNS: {
     DROPPED_THIRD:   "Dropped Third Strike",
     STEALING:        "Stealing Rules",
     FIELD_TYPE:      "Field Type",
+    SUBSTITUTION:    "Substitution Rules",
   }
 };
