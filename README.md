@@ -42,6 +42,9 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | Stealing Rules | HTML | Optional. What stealing is permitted, any restrictions. |
 | Field Type | Text | Optional. `turf`, `grass`, or `mixed`. Displays as a badge in the header. |
 | Substitution Rules | HTML | Optional. Re-entry rules, free substitution, DH rules, etc. Supports rich HTML formatting. |
+| Hotel Name | Text | Optional. Team hotel name. If blank, the hotel banner is hidden. |
+| Hotel Address | Text | Optional. Hotel street address. |
+| Hotel URL | URL | Optional. Link to hotel website. Leave blank to hide the button. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

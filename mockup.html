@@ -296,6 +296,26 @@
     }
 
     .rules-link-wrap { text-align: center; padding: .25rem 0 .1rem; }
+    /* ── HOTEL BANNER ── */
+    .hotel-banner {
+      background: rgba(56,189,248,.08);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: .6rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    }
+    .hotel-banner .hb-left { flex: 1; min-width: 0; }
+    .hotel-banner .hb-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: .15rem; }
+    .hotel-banner .hb-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hotel-banner .hb-addr { font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .1rem; }
+    .hotel-banner .hb-btn {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: .3rem;
+      font-family: 'Barlow Condensed', sans-serif; font-size: .8rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--navy); background: var(--green); border: none; border-radius: 6px;
+      padding: .4rem .75rem; text-decoration: none; white-space: nowrap;
+    }
     .btn-official {
       display: inline-flex; align-items: center; gap: .5rem;
       background: transparent;
@@ -348,6 +368,15 @@
       <div class="t-dates" id="r-dates" style="display:none;"></div>
       <div id="r-field-type" style="display:none;"></div>
     </div>
+  </div>
+
+  <div id="r-hotel-banner" class="hotel-banner" style="display:none;">
+    <div class="hb-left">
+      <div class="hb-eyebrow">🏨 Team Hotel</div>
+      <div class="hb-name" id="r-hotel-name"></div>
+      <div class="hb-addr" id="r-hotel-addr"></div>
+    </div>
+    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener">🌐 Website</a>
   </div>
 
   <div class="quick-stats">
@@ -441,6 +470,9 @@ const SAMPLE = [
     stealing:       "<p>Stealing allowed from <strong>2nd and 3rd</strong> only. No stealing home. Delayed steal permitted.</p>",
     droppedThird:   "<p><strong>Enforced.</strong> Batter may attempt to reach first on an uncaught third strike when first base is unoccupied or with two outs.</p>",
     fieldType:      "turf",
+    hotelName:      "Hampton Inn & Suites Springfield",
+    hotelAddress:   "123 Main Street, Springfield, OH 45501",
+    hotelUrl:       "https://www.hilton.com",
     substitution:   "<p><strong>Free substitution</strong> is allowed for all defensive positions. Offensive substitutions follow standard baseball rules:</p><ul><li>Any player may enter the game on defense at any time</li><li>A starter may re-enter once, provided they were replaced by their original substitute</li><li>Designated hitter (DH) is allowed — DH may not play defense without the pitcher taking a turn at bat</li><li>If a team bats more than 9, the continuous batting order must be declared before the game and all players bat</li><li>Injured players may be replaced without penalty; replaced player may not return</li></ul>",
   },
   {
@@ -461,6 +493,9 @@ const SAMPLE = [
     stealing:       "",
     droppedThird:   "",
     fieldType:      "grass",
+    hotelName:      "",
+    hotelAddress:   "",
+    hotelUrl:       "",
     substitution:   "",
   },
   {
@@ -481,6 +516,9 @@ const SAMPLE = [
     stealing:       "<p><strong>No stealing.</strong> Runners may advance only on batted balls.</p>",
     droppedThird:   "",
     fieldType:      "mixed",
+    hotelName:      "Courtyard by Marriott Lakeville",
+    hotelAddress:   "456 Lake Drive, Lakeville, MN 55044",
+    hotelUrl:       "",
     substitution:   "<p>Standard substitution rules apply. <strong>No re-entry</strong> once a player has been removed.</p>",
   },
 ];
@@ -545,6 +583,24 @@ document.getElementById('view-btn').addEventListener('click', () => {
     datesEl.style.display = 'flex';
   } else {
     datesEl.style.display = 'none';
+  }
+
+  // Hotel banner
+  const hotelBanner = document.getElementById('r-hotel-banner');
+  if (t.hotelName) {
+    document.getElementById('r-hotel-name').textContent = t.hotelName;
+    document.getElementById('r-hotel-addr').textContent = t.hotelAddress || '';
+    document.getElementById('r-hotel-addr').style.display = t.hotelAddress ? 'block' : 'none';
+    const hotelBtn = document.getElementById('r-hotel-url');
+    if (t.hotelUrl) {
+      hotelBtn.href = t.hotelUrl;
+      hotelBtn.style.display = 'inline-flex';
+    } else {
+      hotelBtn.style.display = 'none';
+    }
+    hotelBanner.style.display = 'flex';
+  } else {
+    hotelBanner.style.display = 'none';
   }
 
   // Field type badge

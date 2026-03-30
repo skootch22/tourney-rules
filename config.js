@@ -33,5 +33,8 @@ COLUMNS: {
     STEALING:        "Stealing Rules",
     FIELD_TYPE:      "Field Type",
     SUBSTITUTION:    "Substitution Rules",
+    HOTEL_NAME:      "Hotel Name",
+    HOTEL_ADDRESS:   "Hotel Address",
+    HOTEL_URL:       "Hotel URL",
   }
 };

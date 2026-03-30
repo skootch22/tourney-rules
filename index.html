@@ -249,6 +249,52 @@
     .field-type-badge.mixed { background: rgba(0,0,0,.35); color: #bfdbfe; border: 1.5px solid #93c5fd; }
     .field-type-badge .ft-icon { font-size: .95rem; line-height: 1; }
 
+    /* ── HOTEL BANNER ── */
+    .hotel-banner {
+      background: rgba(56,189,248,.08);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: .6rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .75rem;
+    }
+    .hotel-banner .hb-left { flex: 1; min-width: 0; }
+    .hotel-banner .hb-eyebrow {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--green); margin-bottom: .15rem;
+    }
+    .hotel-banner .hb-name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .hotel-banner .hb-addr {
+      font-size: .75rem; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-top: .1rem;
+    }
+    .hotel-banner .hb-btn {
+      flex-shrink: 0;
+      display: inline-flex; align-items: center; gap: .3rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: .8rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--navy);
+      background: var(--green);
+      border: none; border-radius: 6px;
+      padding: .4rem .75rem;
+      text-decoration: none;
+      transition: background .2s;
+      white-space: nowrap;
+    }
+    .hotel-banner .hb-btn:hover { background: var(--green2); }
+
     /* quick-stats row */
     .quick-stats {
       display: grid;
@@ -419,6 +465,15 @@
     </div>
   </div>
 
+  <div id="r-hotel-banner" class="hotel-banner" style="display:none;">
+    <div class="hb-left">
+      <div class="hb-eyebrow">🏨 Team Hotel</div>
+      <div class="hb-name" id="r-hotel-name"></div>
+      <div class="hb-addr" id="r-hotel-addr"></div>
+    </div>
+    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener">🌐 Website</a>
+  </div>
+
   <div class="quick-stats">
     <div class="stat-cell">
       <span class="s-label">Innings</span>
@@ -549,7 +604,7 @@ async function loadSheet() {
 
     // Validate required columns exist — Sort Order is optional, exclude from check
     const C = CONFIG.COLUMNS;
-    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION']);
+    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION', 'HOTEL_NAME', 'HOTEL_ADDRESS', 'HOTEL_URL']);
     const requiredCols = Object.entries(C)
       .filter(([key]) => !optionalCols.has(key))
       .filter(([, name]) => col(name) === -1)
@@ -581,6 +636,9 @@ async function loadSheet() {
         stealing:       get(r, C.STEALING),
         fieldType:      get(r, C.FIELD_TYPE).toLowerCase(),
         substitution:   get(r, C.SUBSTITUTION),
+        hotelName:      get(r, C.HOTEL_NAME),
+        hotelAddress:   get(r, C.HOTEL_ADDRESS),
+        hotelUrl:       get(r, C.HOTEL_URL),
       }))
       .filter(t => t.name)
       .sort((a, b) => {
@@ -693,6 +751,24 @@ function showRules(t) {
     datesEl.style.display = 'flex';
   } else {
     datesEl.style.display = 'none';
+  }
+
+  // Hotel banner
+  const hotelBanner = document.getElementById('r-hotel-banner');
+  if (t.hotelName) {
+    document.getElementById('r-hotel-name').textContent = t.hotelName;
+    document.getElementById('r-hotel-addr').textContent = t.hotelAddress || '';
+    document.getElementById('r-hotel-addr').style.display = t.hotelAddress ? 'block' : 'none';
+    const hotelBtn = document.getElementById('r-hotel-url');
+    if (t.hotelUrl) {
+      hotelBtn.href = t.hotelUrl;
+      hotelBtn.style.display = 'inline-flex';
+    } else {
+      hotelBtn.style.display = 'none';
+    }
+    hotelBanner.style.display = 'flex';
+  } else {
+    hotelBanner.style.display = 'none';
   }
 
   // Field type badge
