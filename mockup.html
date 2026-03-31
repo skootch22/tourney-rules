@@ -225,6 +225,9 @@
     .field-type-badge.grass { background: rgba(0,0,0,.35); color: #86efac; border: 1.5px solid #4ade80; }
     .field-type-badge.mixed { background: rgba(0,0,0,.35); color: #bfdbfe; border: 1.5px solid #93c5fd; }
     .field-type-badge .ft-icon { font-size: .95rem; line-height: 1; }
+    a.pin-link { color: inherit; text-decoration: none; cursor: pointer; }
+    a.pin-link:hover { text-decoration: underline; opacity: .85; }
+    .hb-addr a.pin-link { color: var(--muted); }
 
     .quick-stats {
       display: grid;
@@ -316,6 +319,19 @@
       color: var(--navy); background: var(--green); border: none; border-radius: 6px;
       padding: .4rem .75rem; text-decoration: none; white-space: nowrap;
     }
+    .hb-map-btn, .btn-maps {
+      flex-shrink: 0; display: inline-flex; align-items: center; gap: .3rem;
+      font-family: 'Barlow Condensed', sans-serif; font-size: .8rem; font-weight: 700;
+      letter-spacing: .05em; text-transform: uppercase;
+      color: var(--navy); background: var(--gold);
+      border: none; border-radius: 6px;
+      padding: .4rem .75rem; text-decoration: none; white-space: nowrap;
+    }
+    .btn-maps {
+      font-size: .72rem; padding: .2rem .55rem;
+      color: rgba(255,255,255,.9); background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.35); width: fit-content; margin-top: .35rem;
+    }
     .btn-official {
       display: inline-flex; align-items: center; gap: .5rem;
       background: transparent;
@@ -364,7 +380,7 @@
     <span class="icon">🏆</span>
     <div>
       <h2 id="r-name"></h2>
-      <div class="location" id="r-location"></div>
+      <a id="r-location" style="color:rgba(255,255,255,.75); font-size:.8rem; font-weight:500; margin-top:.2rem; display:block; text-decoration:none;"></a>
       <div class="t-dates" id="r-dates" style="display:none;"></div>
       <div id="r-field-type" style="display:none;"></div>
     </div>
@@ -374,9 +390,9 @@
     <div class="hb-left">
       <div class="hb-eyebrow">🏨 Team Hotel</div>
       <div class="hb-name" id="r-hotel-name"></div>
-      <div class="hb-addr" id="r-hotel-addr"></div>
+      <div class="hb-addr" id="r-hotel-addr" style="display:none;"></div>
     </div>
-    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener">🌐 Website</a>
+    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
 
   <div class="quick-stats">
@@ -473,6 +489,7 @@ const SAMPLE = [
     hotelName:      "Hampton Inn & Suites Springfield",
     hotelAddress:   "123 Main Street, Springfield, OH 45501",
     hotelUrl:       "https://www.hilton.com",
+    fieldAddress:   "1 Sports Complex Drive, Springfield, OH 45501",
     substitution:   "<p><strong>Free substitution</strong> is allowed for all defensive positions. Offensive substitutions follow standard baseball rules:</p><ul><li>Any player may enter the game on defense at any time</li><li>A starter may re-enter once, provided they were replaced by their original substitute</li><li>Designated hitter (DH) is allowed — DH may not play defense without the pitcher taking a turn at bat</li><li>If a team bats more than 9, the continuous batting order must be declared before the game and all players bat</li><li>Injured players may be replaced without penalty; replaced player may not return</li></ul>",
   },
   {
@@ -496,6 +513,7 @@ const SAMPLE = [
     hotelName:      "",
     hotelAddress:   "",
     hotelUrl:       "",
+    fieldAddress:   "500 Eagle Field Road, Maplewood, MN 55109",
     substitution:   "",
   },
   {
@@ -519,6 +537,7 @@ const SAMPLE = [
     hotelName:      "Courtyard by Marriott Lakeville",
     hotelAddress:   "456 Lake Drive, Lakeville, MN 55044",
     hotelUrl:       "",
+    fieldAddress:   "200 Sunset Blvd, Lakeville, MN 55044",
     substitution:   "<p>Standard substitution rules apply. <strong>No re-entry</strong> once a player has been removed.</p>",
   },
 ];
@@ -566,8 +585,21 @@ document.getElementById('view-btn').addEventListener('click', () => {
   if (selectedIdx === null) return;
   const t = SAMPLE[selectedIdx];
 
-  document.getElementById('r-name').textContent     = t.name;
-  document.getElementById('r-location').textContent = '📍 ' + t.location;
+  document.getElementById('r-name').textContent = t.name;
+
+  // Location — clickable pin if field address exists
+  const locationEl = document.getElementById('r-location');
+  if (t.location) {
+    if (t.fieldAddress) {
+      const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(t.fieldAddress);
+      locationEl.innerHTML = `<a class="pin-link" href="${mapsUrl}" target="_blank" rel="noopener">📍</a> ${t.location}`;
+    } else {
+      locationEl.textContent = '📍 ' + t.location;
+    }
+  } else {
+    locationEl.textContent = '';
+  }
+
   document.getElementById('r-innings').textContent  = t.innings;
   document.getElementById('r-timelimit').textContent= t.timeLimit;
   document.getElementById('r-balks').textContent    = t.balks;
@@ -585,12 +617,18 @@ document.getElementById('view-btn').addEventListener('click', () => {
     datesEl.style.display = 'none';
   }
 
-  // Hotel banner
+  // Hotel banner — clickable pin on address
   const hotelBanner = document.getElementById('r-hotel-banner');
   if (t.hotelName) {
     document.getElementById('r-hotel-name').textContent = t.hotelName;
-    document.getElementById('r-hotel-addr').textContent = t.hotelAddress || '';
-    document.getElementById('r-hotel-addr').style.display = t.hotelAddress ? 'block' : 'none';
+    const addrEl = document.getElementById('r-hotel-addr');
+    if (t.hotelAddress) {
+      const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(t.hotelAddress);
+      addrEl.innerHTML = `<a class="pin-link" href="${mapsUrl}" target="_blank" rel="noopener">📍</a> ${t.hotelAddress}`;
+      addrEl.style.display = 'block';
+    } else {
+      addrEl.style.display = 'none';
+    }
     const hotelBtn = document.getElementById('r-hotel-url');
     if (t.hotelUrl) {
       hotelBtn.href = t.hotelUrl;
@@ -602,8 +640,6 @@ document.getElementById('view-btn').addEventListener('click', () => {
   } else {
     hotelBanner.style.display = 'none';
   }
-
-  // Field type badge
   const fieldTypeEl = document.getElementById('r-field-type');
   const fieldIcons  = { turf: '🟩', grass: '🌿', mixed: '🟩🌿' };
   const fieldLabels = { turf: 'Turf', grass: 'Grass', mixed: 'Mixed' };

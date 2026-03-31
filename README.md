@@ -45,6 +45,7 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | Hotel Name | Text | Optional. Team hotel name. If blank, the hotel banner is hidden. |
 | Hotel Address | Text | Optional. Hotel street address. |
 | Hotel URL | URL | Optional. Link to hotel website. Leave blank to hide the button. |
+| Field Address | Text | Optional. Full street address of the field complex. Used to generate a one-tap directions link. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

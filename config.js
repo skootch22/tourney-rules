@@ -36,5 +36,6 @@ COLUMNS: {
     HOTEL_NAME:      "Hotel Name",
     HOTEL_ADDRESS:   "Hotel Address",
     HOTEL_URL:       "Hotel URL",
+ FIELD_ADDRESS:   "Field Address",
   }
 };
