@@ -389,8 +389,10 @@
   <div id="r-hotel-banner" class="hotel-banner" style="display:none;">
     <div class="hb-left">
       <div class="hb-eyebrow">🏨 Team Hotel</div>
-      <div class="hb-name" id="r-hotel-name"></div>
-      <div class="hb-addr" id="r-hotel-addr" style="display:none;"></div>
+      <div style="display:flex; align-items:center; gap:.4rem;">
+        <span class="hb-name" id="r-hotel-name"></span>
+        <a id="r-hotel-addr" style="font-size:1rem; display:none; text-decoration:none; line-height:1;" target="_blank" rel="noopener" title="Get Directions">📍</a>
+      </div>
     </div>
     <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
@@ -617,15 +619,14 @@ document.getElementById('view-btn').addEventListener('click', () => {
     datesEl.style.display = 'none';
   }
 
-  // Hotel banner — clickable pin on address
+  // Hotel banner — pin icon links to maps, no address text shown
   const hotelBanner = document.getElementById('r-hotel-banner');
   if (t.hotelName) {
     document.getElementById('r-hotel-name').textContent = t.hotelName;
     const addrEl = document.getElementById('r-hotel-addr');
     if (t.hotelAddress) {
-      const mapsUrl = 'https://maps.google.com/?q=' + encodeURIComponent(t.hotelAddress);
-      addrEl.innerHTML = `<a class="pin-link" href="${mapsUrl}" target="_blank" rel="noopener">📍</a> ${t.hotelAddress}`;
-      addrEl.style.display = 'block';
+      addrEl.href = 'https://maps.google.com/?q=' + encodeURIComponent(t.hotelAddress);
+      addrEl.style.display = 'inline';
     } else {
       addrEl.style.display = 'none';
     }
