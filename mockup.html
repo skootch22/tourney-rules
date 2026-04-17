@@ -209,9 +209,17 @@
     .t-title-bar .t-dates {
       font-size: .8rem; color: rgba(255,255,255,.9);
       margin-top: .25rem; font-weight: 600;
-      display: flex; align-items: center; gap: .4rem;
+      display: flex; align-items: center; gap: .4rem; flex-wrap: wrap;
     }
     .t-title-bar .t-dates .date-sep { color: rgba(255,255,255,.4); font-weight: 400; }
+    .t-title-bar .t-dates .games-dot { color: rgba(255,255,255,.35); }
+    .games-badge-inline {
+      display: inline-flex; align-items: center; gap: .25rem;
+      background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px; padding: .1rem .45rem;
+      font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      color: rgba(255,255,255,.95);
+    }
     .field-type-badge {
       display: inline-flex; align-items: center; gap: .35rem;
       margin-top: .3rem;
@@ -236,6 +244,7 @@
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
     }
+    .quick-stats.four-col { grid-template-columns: repeat(4, 1fr); }
     .stat-cell { padding: .85rem .7rem; text-align: center; border-right: 1px solid var(--border); }
     .stat-cell:last-child { border-right: none; }
     .stat-cell .s-label {
@@ -397,7 +406,7 @@
     <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
 
-  <div class="quick-stats">
+  <div class="quick-stats" id="r-quick-stats">
     <div class="stat-cell">
       <span class="s-label">Innings</span>
       <div class="s-value" id="r-innings">—</div>
@@ -492,6 +501,7 @@ const SAMPLE = [
     hotelAddress:   "123 Main Street, Springfield, OH 45501",
     hotelUrl:       "https://www.hilton.com",
     fieldAddress:   "1 Sports Complex Drive, Springfield, OH 45501",
+    guaranteedGames: "4",
     substitution:   "<p><strong>Free substitution</strong> is allowed for all defensive positions. Offensive substitutions follow standard baseball rules:</p><ul><li>Any player may enter the game on defense at any time</li><li>A starter may re-enter once, provided they were replaced by their original substitute</li><li>Designated hitter (DH) is allowed — DH may not play defense without the pitcher taking a turn at bat</li><li>If a team bats more than 9, the continuous batting order must be declared before the game and all players bat</li><li>Injured players may be replaced without penalty; replaced player may not return</li></ul>",
   },
   {
@@ -516,6 +526,7 @@ const SAMPLE = [
     hotelAddress:   "",
     hotelUrl:       "",
     fieldAddress:   "500 Eagle Field Road, Maplewood, MN 55109",
+    guaranteedGames: "3",
     substitution:   "",
   },
   {
@@ -540,6 +551,7 @@ const SAMPLE = [
     hotelAddress:   "456 Lake Drive, Lakeville, MN 55044",
     hotelUrl:       "",
     fieldAddress:   "200 Sunset Blvd, Lakeville, MN 55044",
+    guaranteedGames: "",
     substitution:   "<p>Standard substitution rules apply. <strong>No re-entry</strong> once a player has been removed.</p>",
   },
 ];
@@ -606,14 +618,22 @@ document.getElementById('view-btn').addEventListener('click', () => {
   document.getElementById('r-timelimit').textContent= t.timeLimit;
   document.getElementById('r-balks').textContent    = t.balks;
 
-  // Dates
+  // Dates + guaranteed games inline
   const datesEl = document.getElementById('r-dates');
   if (t.startDate || t.endDate) {
+    let dateHtml = '';
     if (t.startDate && t.endDate && t.startDate !== t.endDate) {
-      datesEl.innerHTML = `📅 ${t.startDate} <span class="date-sep">→</span> ${t.endDate}`;
+      dateHtml = `📅 ${t.startDate} <span class="date-sep">→</span> ${t.endDate}`;
     } else {
-      datesEl.innerHTML = `📅 ${t.startDate || t.endDate}`;
+      dateHtml = `📅 ${t.startDate || t.endDate}`;
     }
+    if (t.guaranteedGames) {
+      dateHtml += ` <span class="games-dot">·</span> <span class="games-badge-inline">🎮 ${t.guaranteedGames} guaranteed</span>`;
+    }
+    datesEl.innerHTML = dateHtml;
+    datesEl.style.display = 'flex';
+  } else if (t.guaranteedGames) {
+    datesEl.innerHTML = `<span class="games-badge-inline">🎮 ${t.guaranteedGames} guaranteed</span>`;
     datesEl.style.display = 'flex';
   } else {
     datesEl.style.display = 'none';

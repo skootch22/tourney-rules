@@ -37,5 +37,6 @@ COLUMNS: {
     HOTEL_ADDRESS:   "Hotel Address",
     HOTEL_URL:       "Hotel URL",
  FIELD_ADDRESS:   "Field Address",
+    GUARANTEED_GAMES:  "Guaranteed Games",
   }
 };

@@ -230,9 +230,21 @@
       display: flex;
       align-items: center;
       gap: .4rem;
+      flex-wrap: wrap;
     }
     .t-title-bar .t-dates .date-sep {      color: rgba(255,255,255,.4);
       font-weight: 400;
+    }
+    .t-title-bar .t-dates .games-dot { color: rgba(255,255,255,.35); }
+    .games-badge-inline {
+      display: inline-flex; align-items: center; gap: .25rem;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.3);
+      border-radius: 20px;
+      padding: .1rem .45rem;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: rgba(255,255,255,.95);
     }
     .field-type-badge {
       display: inline-flex; align-items: center; gap: .35rem;
@@ -351,6 +363,7 @@
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
     }
+    .quick-stats.four-col { grid-template-columns: repeat(4, 1fr); }
     .stat-cell {
       padding: .85rem .7rem;
       text-align: center;
@@ -524,7 +537,7 @@
     <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
 
-  <div class="quick-stats">
+  <div class="quick-stats" id="r-quick-stats">
     <div class="stat-cell">
       <span class="s-label">Innings</span>
       <div class="s-value" id="r-innings">—</div>
@@ -654,7 +667,7 @@ async function loadSheet() {
 
     // Validate required columns exist — Sort Order is optional, exclude from check
     const C = CONFIG.COLUMNS;
-    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION', 'HOTEL_NAME', 'HOTEL_ADDRESS', 'HOTEL_URL', 'FIELD_ADDRESS']);
+    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION', 'HOTEL_NAME', 'HOTEL_ADDRESS', 'HOTEL_URL', 'FIELD_ADDRESS', 'GUARANTEED_GAMES']);
     const requiredCols = Object.entries(C)
       .filter(([key]) => !optionalCols.has(key))
       .filter(([, name]) => col(name) === -1)
@@ -689,7 +702,8 @@ async function loadSheet() {
         hotelName:      get(r, C.HOTEL_NAME),
         hotelAddress:   get(r, C.HOTEL_ADDRESS),
         hotelUrl:       get(r, C.HOTEL_URL),
-        fieldAddress:   get(r, C.FIELD_ADDRESS),
+        fieldAddress:     get(r, C.FIELD_ADDRESS),
+        guaranteedGames:  get(r, C.GUARANTEED_GAMES),
       }))
       .filter(t => t.name)
       .sort((a, b) => {
@@ -802,14 +816,22 @@ function showRules(t) {
   setText('r-timelimit', t.timeLimit);
   setText('r-balks',     t.balks);
 
-  // Dates
+  // Dates + guaranteed games inline
   const datesEl = document.getElementById('r-dates');
   if (t.startDate || t.endDate) {
+    let dateHtml = '';
     if (t.startDate && t.endDate && t.startDate !== t.endDate) {
-      datesEl.innerHTML = `📅 ${escapeHTML(t.startDate)} <span class="date-sep">→</span> ${escapeHTML(t.endDate)}`;
+      dateHtml = `📅 ${escapeHTML(t.startDate)} <span class="date-sep">→</span> ${escapeHTML(t.endDate)}`;
     } else {
-      datesEl.innerHTML = `📅 ${escapeHTML(t.startDate || t.endDate)}`;
+      dateHtml = `📅 ${escapeHTML(t.startDate || t.endDate)}`;
     }
+    if (t.guaranteedGames) {
+      dateHtml += ` <span class="games-dot">·</span> <span class="games-badge-inline">🎮 ${escapeHTML(t.guaranteedGames)} guaranteed</span>`;
+    }
+    datesEl.innerHTML = dateHtml;
+    datesEl.style.display = 'flex';
+  } else if (t.guaranteedGames) {
+    datesEl.innerHTML = `<span class="games-badge-inline">🎮 ${escapeHTML(t.guaranteedGames)} guaranteed</span>`;
     datesEl.style.display = 'flex';
   } else {
     datesEl.style.display = 'none';
