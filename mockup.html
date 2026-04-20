@@ -28,6 +28,7 @@
       background: var(--navy);
       color: var(--light);
       font-family: 'Barlow', sans-serif;
+      font-size: 18px;
       min-height: 100vh;
       padding-bottom: 3rem;
     }
@@ -244,7 +245,6 @@
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
     }
-    .quick-stats.four-col { grid-template-columns: repeat(4, 1fr); }
     .stat-cell { padding: .85rem .7rem; text-align: center; border-right: 1px solid var(--border); }
     .stat-cell:last-child { border-right: none; }
     .stat-cell .s-label {
@@ -320,27 +320,6 @@
     .hotel-banner .hb-left { flex: 1; min-width: 0; }
     .hotel-banner .hb-eyebrow { font-family: 'Barlow Condensed', sans-serif; font-size: .68rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--green); margin-bottom: .15rem; }
     .hotel-banner .hb-name { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hotel-banner .hb-addr { font-size: .75rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .1rem; }
-    .hotel-banner .hb-btn {
-      flex-shrink: 0; display: inline-flex; align-items: center; gap: .3rem;
-      font-family: 'Barlow Condensed', sans-serif; font-size: .8rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--navy); background: var(--green); border: none; border-radius: 6px;
-      padding: .4rem .75rem; text-decoration: none; white-space: nowrap;
-    }
-    .hb-map-btn, .btn-maps {
-      flex-shrink: 0; display: inline-flex; align-items: center; gap: .3rem;
-      font-family: 'Barlow Condensed', sans-serif; font-size: .8rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--navy); background: var(--gold);
-      border: none; border-radius: 6px;
-      padding: .4rem .75rem; text-decoration: none; white-space: nowrap;
-    }
-    .btn-maps {
-      font-size: .72rem; padding: .2rem .55rem;
-      color: rgba(255,255,255,.9); background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.35); width: fit-content; margin-top: .35rem;
-    }
     .btn-official {
       display: inline-flex; align-items: center; gap: .5rem;
       background: transparent;
@@ -392,6 +371,7 @@
       <a id="r-location" style="color:rgba(255,255,255,.75); font-size:.8rem; font-weight:500; margin-top:.2rem; display:block; text-decoration:none;"></a>
       <div class="t-dates" id="r-dates" style="display:none;"></div>
       <div id="r-field-type" style="display:none;"></div>
+      <div id="r-gate-fee" style="display:none; margin-top:.3rem; font-size:.75rem; color:rgba(255,255,255,.85); font-weight:600;">🎟️ Gate Fee: <span id="r-gate-fee-value"></span></div>
     </div>
   </div>
 
@@ -403,7 +383,6 @@
         <a id="r-hotel-addr" style="font-size:1rem; display:none; text-decoration:none; line-height:1;" target="_blank" rel="noopener" title="Get Directions">📍</a>
       </div>
     </div>
-    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
 
   <div class="quick-stats" id="r-quick-stats">
@@ -499,9 +478,9 @@ const SAMPLE = [
     fieldType:      "turf",
     hotelName:      "Hampton Inn & Suites Springfield",
     hotelAddress:   "123 Main Street, Springfield, OH 45501",
-    hotelUrl:       "https://www.hilton.com",
     fieldAddress:   "1 Sports Complex Drive, Springfield, OH 45501",
     guaranteedGames: "4",
+    gateFee:         "$5 per person",
     substitution:   "<p><strong>Free substitution</strong> is allowed for all defensive positions. Offensive substitutions follow standard baseball rules:</p><ul><li>Any player may enter the game on defense at any time</li><li>A starter may re-enter once, provided they were replaced by their original substitute</li><li>Designated hitter (DH) is allowed — DH may not play defense without the pitcher taking a turn at bat</li><li>If a team bats more than 9, the continuous batting order must be declared before the game and all players bat</li><li>Injured players may be replaced without penalty; replaced player may not return</li></ul>",
   },
   {
@@ -524,9 +503,9 @@ const SAMPLE = [
     fieldType:      "grass",
     hotelName:      "",
     hotelAddress:   "",
-    hotelUrl:       "",
     fieldAddress:   "500 Eagle Field Road, Maplewood, MN 55109",
     guaranteedGames: "3",
+    gateFee:         "",
     substitution:   "",
   },
   {
@@ -549,9 +528,9 @@ const SAMPLE = [
     fieldType:      "mixed",
     hotelName:      "Courtyard by Marriott Lakeville",
     hotelAddress:   "456 Lake Drive, Lakeville, MN 55044",
-    hotelUrl:       "",
     fieldAddress:   "200 Sunset Blvd, Lakeville, MN 55044",
     guaranteedGames: "",
+    gateFee:         "Free admission",
     substitution:   "<p>Standard substitution rules apply. <strong>No re-entry</strong> once a player has been removed.</p>",
   },
 ];
@@ -650,17 +629,20 @@ document.getElementById('view-btn').addEventListener('click', () => {
     } else {
       addrEl.style.display = 'none';
     }
-    const hotelBtn = document.getElementById('r-hotel-url');
-    if (t.hotelUrl) {
-      hotelBtn.href = t.hotelUrl;
-      hotelBtn.style.display = 'inline-flex';
-    } else {
-      hotelBtn.style.display = 'none';
-    }
     hotelBanner.style.display = 'flex';
   } else {
     hotelBanner.style.display = 'none';
   }
+
+  // Gate fee
+  const gateFeeEl = document.getElementById('r-gate-fee');
+  if (t.gateFee) {
+    document.getElementById('r-gate-fee-value').textContent = t.gateFee;
+    gateFeeEl.style.display = 'block';
+  } else {
+    gateFeeEl.style.display = 'none';
+  }
+
   const fieldTypeEl = document.getElementById('r-field-type');
   const fieldIcons  = { turf: '🟩', grass: '🌿', mixed: '🟩🌿' };
   const fieldLabels = { turf: 'Turf', grass: 'Grass', mixed: 'Mixed' };

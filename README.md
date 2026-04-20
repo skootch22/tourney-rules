@@ -46,7 +46,8 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | Hotel Address | Text | Optional. Hotel street address. |
 | Hotel URL | URL | Optional. Link to hotel website. Leave blank to hide the button. |
 | Field Address | Text | Optional. Full street address of the field complex. Used to generate a one-tap directions link. |
-| Guaranteed Games | Number | Optional. Minimum number of games guaranteed. Displays in the stats bar. |
+| Guaranteed Games | Number | Optional. Minimum number of games guaranteed. Displays inline with the dates. |
+| Gate Fee | Text | Optional. Admission cost, e.g. `$5 per person` or `Free admission`. Displays in the tournament header. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

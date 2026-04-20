@@ -29,6 +29,7 @@
       background: var(--navy);
       color: var(--light);
       font-family: 'Barlow', sans-serif;
+      font-size: 18px;
       min-height: 100vh;
       padding-bottom: 3rem;
     }
@@ -294,67 +295,6 @@
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       margin-top: .1rem;
     }
-    .hotel-banner .hb-btn {
-      flex-shrink: 0;
-      display: inline-flex; align-items: center; gap: .3rem;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: .8rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--navy);
-      background: var(--green);
-      border: none; border-radius: 6px;
-      padding: .4rem .75rem;
-      text-decoration: none;
-      transition: background .2s;
-      white-space: nowrap;
-    }
-    .hotel-banner .hb-btn:hover { background: var(--green2); }
-    .hb-map-btn {
-      flex-shrink: 0;
-      display: inline-flex; align-items: center; gap: .3rem;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: .8rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--navy);
-      background: var(--gold);
-      border: none; border-radius: 6px;
-      padding: .4rem .75rem;
-      text-decoration: none;
-      transition: background .2s;
-      white-space: nowrap;
-    }
-    .hb-map-btn:hover { background: #e09510; }
-    .hb-buttons { display: flex; flex-direction: column; gap: .35rem; flex-shrink: 0; }
-    .btn-maps {
-      display: inline-flex; align-items: center; gap: .3rem;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: .72rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: rgba(255,255,255,.9);
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.35);
-      border-radius: 5px;
-      padding: .2rem .55rem;
-      text-decoration: none;
-      width: fit-content;
-      transition: background .2s;
-    }
-    .btn-maps:hover { background: rgba(0,0,0,.4); }
-    .btn-maps {
-      display: inline-flex; align-items: center; gap: .35rem;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-size: .78rem; font-weight: 700;
-      letter-spacing: .05em; text-transform: uppercase;
-      color: var(--navy);
-      background: var(--gold);
-      border: none; border-radius: 6px;
-      padding: .35rem .7rem;
-      text-decoration: none;
-      transition: opacity .2s;
-      white-space: nowrap;
-    }
-    .btn-maps:hover { opacity: .85; }
-
     /* quick-stats row */
     .quick-stats {
       display: grid;
@@ -363,7 +303,6 @@
       border-left: 1px solid var(--border);
       border-right: 1px solid var(--border);
     }
-    .quick-stats.four-col { grid-template-columns: repeat(4, 1fr); }
     .stat-cell {
       padding: .85rem .7rem;
       text-align: center;
@@ -523,6 +462,7 @@
       <a id="r-location" style="color:rgba(255,255,255,.75); font-size:.8rem; font-weight:500; margin-top:.2rem; display:block; text-decoration:none;"></a>
       <div class="t-dates" id="r-dates" style="display:none;"></div>
       <div id="r-field-type" style="display:none;"></div>
+      <div id="r-gate-fee" style="display:none; margin-top:.3rem; font-size:.75rem; color:rgba(255,255,255,.85); font-weight:600;">🎟️ Gate Fee: <span id="r-gate-fee-value"></span></div>
     </div>
   </div>
 
@@ -534,7 +474,6 @@
         <a id="r-hotel-addr" style="font-size:1rem; display:none; text-decoration:none; line-height:1;" target="_blank" rel="noopener" title="Get Directions">📍</a>
       </div>
     </div>
-    <a id="r-hotel-url" class="hb-btn" href="#" target="_blank" rel="noopener" style="display:none;">🌐 Website</a>
   </div>
 
   <div class="quick-stats" id="r-quick-stats">
@@ -667,7 +606,7 @@ async function loadSheet() {
 
     // Validate required columns exist — Sort Order is optional, exclude from check
     const C = CONFIG.COLUMNS;
-    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION', 'HOTEL_NAME', 'HOTEL_ADDRESS', 'HOTEL_URL', 'FIELD_ADDRESS', 'GUARANTEED_GAMES']);
+    const optionalCols = new Set(['SORT_ORDER', 'START_DATE', 'END_DATE', 'DROPPED_THIRD', 'STEALING', 'FIELD_TYPE', 'SUBSTITUTION', 'HOTEL_NAME', 'HOTEL_ADDRESS', 'HOTEL_URL', 'FIELD_ADDRESS', 'GUARANTEED_GAMES', 'GATE_FEE']);
     const requiredCols = Object.entries(C)
       .filter(([key]) => !optionalCols.has(key))
       .filter(([, name]) => col(name) === -1)
@@ -701,9 +640,9 @@ async function loadSheet() {
         substitution:   get(r, C.SUBSTITUTION),
         hotelName:      get(r, C.HOTEL_NAME),
         hotelAddress:   get(r, C.HOTEL_ADDRESS),
-        hotelUrl:       get(r, C.HOTEL_URL),
         fieldAddress:     get(r, C.FIELD_ADDRESS),
         guaranteedGames:  get(r, C.GUARANTEED_GAMES),
+        gateFee:          get(r, C.GATE_FEE),
       }))
       .filter(t => t.name)
       .sort((a, b) => {
@@ -848,16 +787,18 @@ function showRules(t) {
     } else {
       addrEl.style.display = 'none';
     }
-    const hotelBtn = document.getElementById('r-hotel-url');
-    if (t.hotelUrl) {
-      hotelBtn.href = t.hotelUrl;
-      hotelBtn.style.display = 'inline-flex';
-    } else {
-      hotelBtn.style.display = 'none';
-    }
     hotelBanner.style.display = 'flex';
   } else {
     hotelBanner.style.display = 'none';
+  }
+
+  // Gate fee
+  const gateFeeEl = document.getElementById('r-gate-fee');
+  if (t.gateFee) {
+    document.getElementById('r-gate-fee-value').textContent = t.gateFee;
+    gateFeeEl.style.display = 'block';
+  } else {
+    gateFeeEl.style.display = 'none';
   }
 
   // Field type badge
