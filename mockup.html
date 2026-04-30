@@ -199,7 +199,12 @@
       padding: 1rem 1.2rem .9rem;
       display: flex; align-items: center; gap: .8rem;
     }
-    .t-title-bar .icon { font-size: 1.5rem; flex-shrink: 0; }
+    .t-title-bar h2 a {
+      color: inherit; text-decoration: none;
+      border-bottom: 1.5px solid rgba(255,255,255,.4);
+      transition: border-color .2s;
+    }
+    .t-title-bar h2 a:hover { border-color: rgba(255,255,255,.9); }
     .t-title-bar h2 {
       font-family: 'Barlow Condensed', sans-serif;
       font-size: clamp(1.2rem, 5vw, 1.7rem);
@@ -214,13 +219,14 @@
     }
     .t-title-bar .t-dates .date-sep { color: rgba(255,255,255,.4); font-weight: 400; }
     .t-title-bar .t-dates .games-dot { color: rgba(255,255,255,.35); }
-    .games-badge-inline {
+    .info-badge {
       display: inline-flex; align-items: center; gap: .25rem;
       background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.3);
-      border-radius: 20px; padding: .1rem .45rem;
-      font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
-      color: rgba(255,255,255,.95);
+      border-radius: 20px; padding: .12rem .5rem;
+      font-size: .72rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+      color: rgba(255,255,255,.95); white-space: nowrap;
     }
+    .info-row { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; margin-top: .3rem; }
     .field-type-badge {
       display: inline-flex; align-items: center; gap: .35rem;
       margin-top: .3rem;
@@ -370,6 +376,7 @@
       <h2 id="r-name"></h2>
       <a id="r-location" style="color:rgba(255,255,255,.75); font-size:.8rem; font-weight:500; margin-top:.2rem; display:block; text-decoration:none;"></a>
       <div class="t-dates" id="r-dates" style="display:none;"></div>
+      <div class="info-row" id="r-info-row" style="display:none;"></div>
       <div id="r-field-type" style="display:none;"></div>
       <div id="r-gate-fee" style="display:none; margin-top:.3rem; font-size:.75rem; color:rgba(255,255,255,.85); font-weight:600;">🎟️ Gate Fee: <span id="r-gate-fee-value"></span></div>
     </div>
@@ -480,6 +487,8 @@ const SAMPLE = [
     hotelAddress:   "123 Main Street, Springfield, OH 45501",
     fieldAddress:   "1 Sports Complex Drive, Springfield, OH 45501",
     guaranteedGames: "4",
+    numTeams:        "24",
+    tournamentUrl:   "https://www.example.com/spring-classic",
     gateFee:         "$5 per person",
     substitution:   "<p><strong>Free substitution</strong> is allowed for all defensive positions. Offensive substitutions follow standard baseball rules:</p><ul><li>Any player may enter the game on defense at any time</li><li>A starter may re-enter once, provided they were replaced by their original substitute</li><li>Designated hitter (DH) is allowed — DH may not play defense without the pitcher taking a turn at bat</li><li>If a team bats more than 9, the continuous batting order must be declared before the game and all players bat</li><li>Injured players may be replaced without penalty; replaced player may not return</li></ul>",
   },
@@ -505,6 +514,8 @@ const SAMPLE = [
     hotelAddress:   "",
     fieldAddress:   "500 Eagle Field Road, Maplewood, MN 55109",
     guaranteedGames: "3",
+    numTeams:        "16",
+    tournamentUrl:   "",
     gateFee:         "",
     substitution:   "",
   },
@@ -530,6 +541,8 @@ const SAMPLE = [
     hotelAddress:   "456 Lake Drive, Lakeville, MN 55044",
     fieldAddress:   "200 Sunset Blvd, Lakeville, MN 55044",
     guaranteedGames: "",
+    numTeams:        "",
+    tournamentUrl:   "https://www.example.com/fall-finale",
     gateFee:         "Free admission",
     substitution:   "<p>Standard substitution rules apply. <strong>No re-entry</strong> once a player has been removed.</p>",
   },
@@ -578,7 +591,13 @@ document.getElementById('view-btn').addEventListener('click', () => {
   if (selectedIdx === null) return;
   const t = SAMPLE[selectedIdx];
 
-  document.getElementById('r-name').textContent = t.name;
+  // Tournament name — clickable if URL provided
+  const nameEl = document.getElementById('r-name');
+  if (t.tournamentUrl) {
+    nameEl.innerHTML = `<a href="${t.tournamentUrl}" target="_blank" rel="noopener">${t.name}</a>`;
+  } else {
+    nameEl.textContent = t.name;
+  }
 
   // Location — clickable pin if field address exists
   const locationEl = document.getElementById('r-location');
@@ -597,7 +616,7 @@ document.getElementById('view-btn').addEventListener('click', () => {
   document.getElementById('r-timelimit').textContent= t.timeLimit;
   document.getElementById('r-balks').textContent    = t.balks;
 
-  // Dates + guaranteed games inline
+  // Dates
   const datesEl = document.getElementById('r-dates');
   if (t.startDate || t.endDate) {
     let dateHtml = '';
@@ -606,16 +625,22 @@ document.getElementById('view-btn').addEventListener('click', () => {
     } else {
       dateHtml = `📅 ${t.startDate || t.endDate}`;
     }
-    if (t.guaranteedGames) {
-      dateHtml += ` <span class="games-dot">·</span> <span class="games-badge-inline">🎮 ${t.guaranteedGames} guaranteed</span>`;
-    }
     datesEl.innerHTML = dateHtml;
-    datesEl.style.display = 'flex';
-  } else if (t.guaranteedGames) {
-    datesEl.innerHTML = `<span class="games-badge-inline">🎮 ${t.guaranteedGames} guaranteed</span>`;
     datesEl.style.display = 'flex';
   } else {
     datesEl.style.display = 'none';
+  }
+
+  // Info row — guaranteed games + number of teams
+  const infoRow = document.getElementById('r-info-row');
+  let infoHtml = '';
+  if (t.guaranteedGames) infoHtml += `<span class="info-badge">🎮 ${t.guaranteedGames} guaranteed</span>`;
+  if (t.numTeams)        infoHtml += `<span class="info-badge">👥 ${t.numTeams} teams</span>`;
+  if (infoHtml) {
+    infoRow.innerHTML = infoHtml;
+    infoRow.style.display = 'flex';
+  } else {
+    infoRow.style.display = 'none';
   }
 
   // Hotel banner — pin icon links to maps, no address text shown

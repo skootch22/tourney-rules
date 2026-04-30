@@ -48,6 +48,8 @@ Set up a sheet with the following columns. **Column order doesn't matter** — t
 | Field Address | Text | Optional. Full street address of the field complex. Used to generate a one-tap directions link. |
 | Guaranteed Games | Number | Optional. Minimum number of games guaranteed. Displays inline with the dates. |
 | Gate Fee | Text | Optional. Admission cost, e.g. `$5 per person` or `Free admission`. Displays in the tournament header. |
+| Number of Teams | Integer | Optional. Total teams in the tournament. Displays as a badge alongside guaranteed games. |
+| Tournament URL | URL | Optional. Link to the tournament's website. Makes the tournament name a clickable link in the header. |
 
 > **HTML fields:** You can use basic HTML directly in those sheet cells. For example, a Mercy Rule cell might contain:
 > ```html

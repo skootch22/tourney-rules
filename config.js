@@ -39,5 +39,8 @@ COLUMNS: {
  FIELD_ADDRESS:   "Field Address",
     GUARANTEED_GAMES:  "Guaranteed Games",
     GATE_FEE:          "Gate Fee",
+  NUM_TEAMS:         "Number of Teams",
+    TOURNAMENT_URL:    "Tournament URL",
+
   }
 };
