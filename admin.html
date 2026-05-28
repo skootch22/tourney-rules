@@ -572,11 +572,6 @@
         </div>
 
         <div class="form-group">
-          <label>Number of Teams</label>
-          <input type="number" id="f-num-teams" placeholder="e.g. 16" min="1" />
-        </div>
-
-        <div class="form-group">
           <label>Guaranteed Games</label>
           <input type="number" id="f-guaranteed-games" placeholder="e.g. 3" min="1" />
         </div>
@@ -584,6 +579,15 @@
         <div class="form-group">
           <label>Gate Fee</label>
           <input type="text" id="f-gate-fee" placeholder="e.g. $5/person" />
+        </div>
+
+        <div class="form-group full">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.5rem;">
+            <label style="margin:0;">Teams in Tournament <span class="hint">optional — enables tap-to-view team list</span></label>
+            <button type="button" class="btn-secondary" id="btn-add-team" style="font-size:.75rem; padding:.35rem .75rem;">+ Add Team</button>
+          </div>
+          <div id="teams-list" style="display:flex; flex-direction:column; gap:.5rem;"></div>
+          <div id="teams-empty" style="font-size:.82rem; color:var(--muted); padding:.35rem 0; display:none;">No teams added. Count card will be hidden in the app.</div>
         </div>
 
         <div class="form-group full checkbox-row">
@@ -671,21 +675,14 @@
         </div>
 
         <hr class="form-section-divider" />
-        <div class="form-section-label">Hotel (optional)</div>
-
-        <div class="form-group">
-          <label>Hotel Name</label>
-          <input type="text" id="f-hotel-name" placeholder="e.g. Hilton Garden Inn" />
+        <div class="form-section-label" style="grid-column:1/-1; display:flex; align-items:center; justify-content:space-between;">
+          Hotels (optional)
+          <button type="button" class="btn-secondary" id="btn-add-hotel" style="font-size:.75rem; padding:.35rem .75rem;">+ Add Hotel</button>
         </div>
 
-        <div class="form-group">
-          <label>Hotel Address <span class="hint">for maps link</span></label>
-          <input type="text" id="f-hotel-address" placeholder="e.g. 3928 Jackpot Road, Grove City, OH" />
-        </div>
-
-        <div class="form-group full">
-          <label>Hotel URL</label>
-          <input type="url" id="f-hotel-url" placeholder="https://..." />
+        <div class="full" id="hotels-manager">
+          <div id="hotels-list" style="display:flex; flex-direction:column; gap:.75rem;"></div>
+          <div id="hotels-empty" style="font-size:.82rem; color:var(--muted); padding:.5rem 0; display:none;">No hotels added yet. Click + Add Hotel to add one.</div>
         </div>
 
         <hr class="form-section-divider" />
@@ -882,7 +879,6 @@ function getAuthHeaders() {
     'apikey':        CONFIG.SUPABASE_ANON_KEY,
     'Authorization': `Bearer ${sbSession?.access_token || localStorage.getItem('sb_access_token') || ''}`,
     'Content-Type':  'application/json',
-    'Prefer':        'return=representation'
   };
 }
 
@@ -932,11 +928,52 @@ async function handleLogin() {
 document.getElementById('btn-logout').addEventListener('click', signOut);
 
 // ── SUPABASE HELPERS ──────────────────────────────────────────
+async function refreshToken() {
+  const refresh_token = localStorage.getItem('sb_refresh_token');
+  if (!refresh_token) return false;
+  try {
+    const res = await fetch(`${CONFIG.SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'apikey':       CONFIG.SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refresh_token })
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    localStorage.setItem('sb_access_token',  data.access_token);
+    localStorage.setItem('sb_refresh_token', data.refresh_token);
+    sbSession = data;
+    return true;
+  } catch { return false; }
+}
+
 async function sbFetch(path, options = {}) {
-  const res = await fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${path}`, {
-    headers: getAuthHeaders(),
-    ...options
+  const { headers: optHeaders, ...restOptions } = options;
+
+  const doFetch = () => fetch(`${CONFIG.SUPABASE_URL}/rest/v1/${path}`, {
+    ...restOptions,
+    headers: {
+      ...getAuthHeaders(),
+      ...(optHeaders || {}),
+    },
   });
+
+  let res = await doFetch();
+
+  // If 401, try refreshing the token once and retry
+  if (res.status === 401) {
+    const refreshed = await refreshToken();
+    if (refreshed) {
+      res = await doFetch();
+    } else {
+      // Refresh failed — session is dead, send back to login
+      showLogin();
+      throw new Error('Session expired. Please log in again.');
+    }
+  }
+
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || `HTTP ${res.status}`);
@@ -997,6 +1034,148 @@ function formatDateRange(start, end) {
   return fmt(start || end);
 }
 
+// ── HOTELS ────────────────────────────────────────────────────
+let hotelRows = []; // { id (existing uuid or null), name, address, url, sort_order, _delete }
+
+function renderHotelRows() {
+  const list = getEl('hotels-list');
+  const empty = getEl('hotels-empty');
+  const active = hotelRows.filter(h => !h._delete);
+  if (!active.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = active.map((h, i) => `
+    <div class="hotel-row" data-idx="${hotelRows.indexOf(h)}" style="background:var(--navy); border:1px solid var(--border); border-radius:8px; padding:.85rem; display:flex; flex-direction:column; gap:.6rem;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:.1rem;">
+        <span style="font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Hotel ${i + 1}</span>
+        <button type="button" class="btn-danger" style="font-size:.72rem; padding:.25rem .6rem;" onclick="removeHotel(${hotelRows.indexOf(h)})">Remove</button>
+      </div>
+      <input type="text" placeholder="Hotel Name" value="${escapeHTML(h.name || '')}"
+        oninput="hotelRows[${hotelRows.indexOf(h)}].name = this.value"
+        style="background:var(--card-bg); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.55rem .85rem; font-family:'Barlow',sans-serif; font-size:.9rem; width:100%;" />
+      <input type="text" placeholder="Address (for maps link)" value="${escapeHTML(h.address || '')}"
+        oninput="hotelRows[${hotelRows.indexOf(h)}].address = this.value"
+        style="background:var(--card-bg); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.55rem .85rem; font-family:'Barlow',sans-serif; font-size:.9rem; width:100%;" />
+      <input type="url" placeholder="Booking URL (optional)" value="${escapeHTML(h.url || '')}"
+        oninput="hotelRows[${hotelRows.indexOf(h)}].url = this.value"
+        style="background:var(--card-bg); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.55rem .85rem; font-family:'Barlow',sans-serif; font-size:.9rem; width:100%;" />
+    </div>
+  `).join('');
+}
+
+function addHotelRow() {
+  hotelRows.push({ id: null, name: '', address: '', url: '', sort_order: hotelRows.length + 1, _delete: false });
+  renderHotelRows();
+}
+
+function removeHotel(idx) {
+  if (hotelRows[idx].id) {
+    hotelRows[idx]._delete = true; // mark for deletion if existing
+  } else {
+    hotelRows.splice(idx, 1); // just remove if new
+  }
+  renderHotelRows();
+}
+
+async function loadHotelsForTournament(tournamentId) {
+  try {
+    const data = await sbFetch(`hotels?tournament_id=eq.${tournamentId}&order=sort_order.asc`);
+    hotelRows = (data || []).map(h => ({ id: h.id, name: h.name || '', address: h.address || '', url: h.url || '', sort_order: h.sort_order, _delete: false }));
+  } catch { hotelRows = []; }
+  renderHotelRows();
+}
+
+async function saveHotels(tournamentId) {
+  const promises = [];
+  hotelRows.forEach((h, i) => {
+    if (h._delete && h.id) {
+      promises.push(sbFetch(`hotels?id=eq.${h.id}`, { method: 'DELETE' }));
+    } else if (!h._delete && h.name.trim()) {
+      const payload = { tournament_id: tournamentId, name: h.name.trim(), address: h.address.trim() || null, url: h.url.trim() || null, sort_order: i + 1 };
+      if (h.id) {
+        const { tournament_id, ...patch } = payload;
+        promises.push(sbFetch(`hotels?id=eq.${h.id}`, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(patch) }));
+      } else {
+        promises.push(sbFetch('hotels', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(payload) }));
+      }
+    }
+  });
+  await Promise.all(promises);
+}
+
+getEl('btn-add-hotel').addEventListener('click', addHotelRow);
+
+// ── TOURNAMENT TEAMS ──────────────────────────────────────────
+let teamRows = []; // { id (existing uuid or null), name, sort_order, _delete }
+
+function renderTeamRows() {
+  const list = getEl('teams-list');
+  const empty = getEl('teams-empty');
+  const active = teamRows.filter(r => !r._delete);
+  if (!active.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  list.innerHTML = active.map((r) => {
+    const idx = teamRows.indexOf(r);
+    return `
+      <div style="display:flex; gap:.5rem; align-items:center;">
+        <input type="text" placeholder="Team name e.g. Cardinals 12U"
+          value="${escapeHTML(r.name || '')}"
+          oninput="teamRows[${idx}].name = this.value"
+          style="flex:1; background:var(--navy); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.55rem .85rem; font-family:'Barlow',sans-serif; font-size:.9rem;" />
+        <button type="button" class="btn-danger" style="font-size:.72rem; padding:.25rem .6rem; white-space:nowrap;" onclick="removeTeamRow(${idx})">Remove</button>
+      </div>`;
+  }).join('');
+}
+
+function addTeamRow() {
+  teamRows.push({ id: null, name: '', sort_order: teamRows.length + 1, _delete: false });
+  renderTeamRows();
+}
+
+function removeTeamRow(idx) {
+  if (teamRows[idx].id) {
+    teamRows[idx]._delete = true;
+  } else {
+    teamRows.splice(idx, 1);
+  }
+  renderTeamRows();
+}
+
+async function loadTeamsForTournament(tournamentId) {
+  try {
+    const data = await sbFetch(`tournament_teams?tournament_id=eq.${tournamentId}&order=sort_order.asc`);
+    teamRows = (data || []).map(r => ({ id: r.id, name: r.name || '', sort_order: r.sort_order, _delete: false }));
+  } catch { teamRows = []; }
+  renderTeamRows();
+}
+
+async function saveTeams(tournamentId) {
+  const promises = [];
+  teamRows.forEach((r, i) => {
+    if (r._delete && r.id) {
+      promises.push(sbFetch(`tournament_teams?id=eq.${r.id}`, { method: 'DELETE' }));
+    } else if (!r._delete && r.name.trim()) {
+      const payload = { tournament_id: tournamentId, name: r.name.trim(), sort_order: i + 1 };
+      if (r.id) {
+        const { tournament_id, ...patch } = payload;
+        promises.push(sbFetch(`tournament_teams?id=eq.${r.id}`, { method: 'PATCH', headers: { 'Prefer': 'return=minimal' }, body: JSON.stringify(patch) }));
+      } else {
+        promises.push(sbFetch('tournament_teams', { method: 'POST', headers: { 'Prefer': 'return=representation' }, body: JSON.stringify(payload) }));
+      }
+    }
+  });
+  await Promise.all(promises);
+}
+
+getEl('btn-add-team').addEventListener('click', addTeamRow);
+
 // ── FORM ──────────────────────────────────────────────────────
 const FIELDS = [
   ['f-tournament',       'tournament',        'text'],
@@ -1006,7 +1185,6 @@ const FIELDS = [
   ['f-end-date',         'end_date',          'text'],
   ['f-tournament-url',   'tournament_url',    'text'],
   ['f-rules-url',        'rules_url',         'text'],
-  ['f-num-teams',        'num_teams',         'int'],
   ['f-guaranteed-games', 'guaranteed_games',  'int'],
   ['f-gate-fee',         'gate_fee',          'text'],
   ['f-active',           'active',            'bool'],
@@ -1022,9 +1200,6 @@ const FIELDS = [
   ['f-tie-breakers',     'tie_breakers',      'text'],
   ['f-substitution-rules','substitution_rules','text'],
   ['f-stealing-rules',   'stealing_rules',    'text'],
-  ['f-hotel-name',       'hotel_name',        'text'],
-  ['f-hotel-address',    'hotel_address',     'text'],
-  ['f-hotel-url',        'hotel_url',         'text'],
   ['f-notes',            'notes',             'text'],
 ];
 
@@ -1064,18 +1239,26 @@ function recordFromForm() {
 function openAdd() {
   editingId = null;
   clearForm();
+  hotelRows = [];
+  renderHotelRows();
+  teamRows = [];
+  renderTeamRows();
   getEl('form-title').textContent = 'Add Tournament';
   getEl('btn-save').textContent = 'Save Tournament';
   showForm();
 }
 
-function openEdit(id) {
+async function openEdit(id) {
   const t = allTournaments.find(x => x.id === id);
   if (!t) return;
   editingId = id;
   formFromRecord(t);
   getEl('form-title').textContent = 'Edit Tournament';
   getEl('btn-save').textContent = 'Save Changes';
+  await Promise.all([
+    loadHotelsForTournament(id),
+    loadTeamsForTournament(id)
+  ]);
   showForm();
 }
 
@@ -1106,19 +1289,27 @@ document.getElementById('btn-save').addEventListener('click', async () => {
   btn.textContent = 'Saving…';
 
   try {
+    let tournamentId = editingId;
     if (editingId) {
+      const { team_id, ...patchRec } = rec;
       await sbFetch(`tournaments?id=eq.${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify(rec)
+        headers: { 'Prefer': 'return=minimal' },
+        body: JSON.stringify(patchRec)
       });
-      showToast('Tournament updated.', 'success');
     } else {
-      await sbFetch('tournaments', {
+      const result = await sbFetch('tournaments', {
         method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
         body: JSON.stringify(rec)
       });
-      showToast('Tournament added.', 'success');
+      tournamentId = result[0].id;
     }
+    await Promise.all([
+      saveHotels(tournamentId),
+      saveTeams(tournamentId)
+    ]);
+    showToast(editingId ? 'Tournament updated.' : 'Tournament added.', 'success');
     hideForm();
     await loadTournaments();
   } catch (err) {
@@ -1173,22 +1364,6 @@ function escapeAttr(str) {
   return String(str).replace(/'/g, "\\'");
 }
 
-// ── FOOTER BRAND ──────────────────────────────────────────────
-(function applyFooterBrand() {
-  const brand = document.getElementById('footer-brand');
-  const img   = document.getElementById('footer-brand-img');
-  const text  = document.getElementById('footer-brand-text');
-  const src   = CONFIG.BRAND_LOGO_SRC || CONFIG.LOGO_SRC || '';
-  const label = CONFIG.BRAND_LOGO_TEXT || '';
-  if (src || label) {
-    if (src)   { img.src = src; img.alt = label || ''; img.style.display = 'block'; }
-    else         { img.style.display = 'none'; }
-    if (label) { text.textContent = label; text.style.display = 'block'; }
-    else         { text.style.display = 'none'; }
-    brand.style.display = 'flex';
-  }
-})();
-
 // ── INIT ──────────────────────────────────────────────────────
 (async () => {
   const session = await getSession();
@@ -1206,5 +1381,22 @@ function escapeAttr(str) {
   </div>
 </footer>
 
-</body>
-</html>
+<script>
+// ── FOOTER BRAND ──────────────────────────────────────────────
+// Runs after footer HTML is in the DOM
+(function applyFooterBrand() {
+  const brand = document.getElementById('footer-brand');
+  const img   = document.getElementById('footer-brand-img');
+  const text  = document.getElementById('footer-brand-text');
+  if (!brand || !img || !text) return;
+  const src   = CONFIG.BRAND_LOGO_SRC || CONFIG.LOGO_SRC || '';
+  const label = CONFIG.BRAND_LOGO_TEXT || '';
+  if (src || label) {
+    if (src)   { img.src = src; img.alt = label || ''; img.style.display = 'block'; }
+    else         { img.style.display = 'none'; }
+    if (label) { text.textContent = label; text.style.display = 'block'; }
+    else         { text.style.display = 'none'; }
+    brand.style.display = 'flex';
+  }
+})();
+</script>
