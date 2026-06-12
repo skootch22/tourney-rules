@@ -515,6 +515,72 @@
     .btn-official:hover { background: var(--green); color: var(--navy); }
 
     /* ── FOOTER ── */
+    /* ── SCHEDULE ── */
+    .game-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      padding: .65rem .85rem;
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+    }
+    .game-card:last-child { border-radius: 0 0 8px 8px; }
+    .game-card + .game-card { border-top: 1px solid var(--border); }
+    .game-card-left {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .4rem .6rem;
+      min-width: 52px;
+      flex-shrink: 0;
+      text-align: center;
+    }
+    .game-card-day {
+      font-size: .58rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+    .game-card-time {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--light);
+      line-height: 1.1;
+    }
+    .game-card-right { flex: 1; min-width: 0; }
+    .game-card-opponent {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--light);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .game-card-location {
+      font-size: .72rem;
+      color: var(--muted);
+      margin-top: .1rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .game-card-loading {
+      padding: .75rem .85rem;
+      font-size: .82rem;
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+    }
+
     footer {
       text-align: center;
       color: var(--muted);
@@ -549,6 +615,12 @@
   </style>
 </head>
 <body>
+<script>
+  // Redirect Supabase invite/recovery tokens to admin page
+  if (window.location.hash.includes('type=invite') || window.location.hash.includes('type=recovery')) {
+    window.location.replace('admin.html' + window.location.hash);
+  }
+</script>
 
 <header>
   <img id="header-logo" src="" alt="" class="logo-icon" style="display:none;">
@@ -625,6 +697,14 @@
       </div>
     </div>
 
+    <div class="rule-card" id="r-run-rule-card" style="display:none;">
+      <div class="rule-card-head">
+        <span class="rc-icon">🏃</span>
+        <span class="rc-label">Per Inning Run Rule</span>
+      </div>
+      <div class="rule-card-body" id="r-run-rule"></div>
+    </div>
+
     <div class="rule-card">
       <div class="rule-card-head">
         <span class="rc-icon">⚾</span>
@@ -682,6 +762,14 @@
         <span class="rc-label">Notes</span>
       </div>
       <div class="rule-card-body" id="r-notes"></div>
+    </div>
+
+    <div id="r-schedule-card" style="display:none;">
+      <div class="rule-card-head" style="border-radius:var(--card-radius) var(--card-radius) 0 0; border:1px solid var(--border); border-bottom:none;">
+        <span class="rc-icon">📅</span>
+        <span class="rc-label">Schedule</span>
+      </div>
+      <div id="r-schedule-list"></div>
     </div>
 
     <div class="rules-link-wrap" id="r-rules-wrap" style="display:none;">
@@ -911,7 +999,7 @@ async function loadSheet() {
       }
     );
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const [data, hotelsData, teamsData] = await Promise.all([
+    const [data, hotelsData, teamsData, teamData] = await Promise.all([
       res.json(),
       fetch(
         `${CONFIG.SUPABASE_URL}/rest/v1/hotels?order=sort_order.asc`,
@@ -920,8 +1008,16 @@ async function loadSheet() {
       fetch(
         `${CONFIG.SUPABASE_URL}/rest/v1/tournament_teams?order=name.asc`,
         { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
+      ).then(r => r.json()).catch(() => []),
+      fetch(
+        `${CONFIG.SUPABASE_URL}/rest/v1/teams?id=eq.${CONFIG.TEAM_ID}`,
+        { headers: { 'apikey': CONFIG.SUPABASE_ANON_KEY, 'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}` } }
       ).then(r => r.json()).catch(() => [])
     ]);
+
+    // Store iCal URL and team name for schedule loading
+    window._gcIcalUrl = (teamData && teamData[0]) ? teamData[0].gamechanger_ical || '' : '';
+    window._gcTeamName = (teamData && teamData[0]) ? teamData[0].gamechanger_team_name || '' : '';
 
     if (!Array.isArray(data)) throw new Error('Unexpected response from database.');
 
@@ -930,6 +1026,7 @@ async function loadSheet() {
       location:        r.location              || '',
       timeLimit:       r.time_limit            || '',
       innings:         r.innings               ? String(r.innings) : '',
+      runRule:         r.run_rule              ? String(r.run_rule) : '',
       mercyRule:       r.mercy_rule            || '',
       pitchingLimits:  r.pitching_limits       || '',
       balks:           r.balks                 || '',
@@ -1152,6 +1249,15 @@ function showRules(t) {
   document.getElementById('r-extra').innerHTML      = renderMarkdown(t.extraInning);
   document.getElementById('r-tiebreaker').innerHTML = renderMarkdown(t.tieBreaker);
 
+  // Per Inning Run Rule (optional, hidden if blank)
+  const runRuleCard = document.getElementById('r-run-rule-card');
+  if (t.runRule && t.runRule !== '0') {
+    document.getElementById('r-run-rule').textContent = `${t.runRule} runs per inning`;
+    runRuleCard.style.display = 'block';
+  } else {
+    runRuleCard.style.display = 'none';
+  }
+
   // Substitution Rules (optional, full-width)
   const subCard = document.getElementById('r-substitution-card');
   if (t.substitution) {
@@ -1188,6 +1294,9 @@ function showRules(t) {
     notesCard.style.display = 'none';
   }
 
+  // Schedule from GameChanger iCal
+  loadSchedule(t);
+
   // Official rules URL
   const rulesWrap = document.getElementById('r-rules-wrap');
   if (t.rulesUrl) {
@@ -1214,6 +1323,129 @@ function escapeHTML(str) {
 function renderMarkdown(val) {
   if (!val) return '<em style="color:var(--muted)">Not specified</em>';
   return marked.parse(val);
+}
+
+// ── iCAL SCHEDULE ──────────────────────────────────────────────
+function parseIcal(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT');
+  blocks.shift();
+  for (const block of blocks) {
+    const get = (key) => {
+      const match = block.match(new RegExp(`${key}[^:]*:([^\\r\\n]+)`));
+      return match ? match[1].trim() : '';
+    };
+    const dtstart  = get('DTSTART');
+    const summary  = get('SUMMARY');
+    const location = get('LOCATION');
+    if (!dtstart || !summary) continue;
+    const isUTC = /Z$/.test(dtstart.trim());
+    const dateStr = dtstart.replace(/[^0-9T]/g, '');
+    const year  = dateStr.substring(0, 4);
+    const month = dateStr.substring(4, 6);
+    const day   = dateStr.substring(6, 8);
+    const hour  = dateStr.length > 8 ? dateStr.substring(9, 11) : '00';
+    const min   = dateStr.length > 8 ? dateStr.substring(11, 13) : '00';
+    const sec   = dateStr.length > 8 ? (dateStr.substring(13, 15) || '00') : '00';
+    const date  = isUTC
+      ? new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}Z`)
+      : new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}`);
+    events.push({ date, summary, location });
+  }
+  return events;
+}
+
+function formatGameTime(date) {
+  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+}
+function formatGameDay(date) {
+  return date.toLocaleDateString('en-US', { weekday: 'short' });
+}
+
+async function loadSchedule(tournament) {
+  const card = document.getElementById('r-schedule-card');
+  const list = document.getElementById('r-schedule-list');
+
+  if (!window._gcIcalUrl || !tournament.startDate || !tournament.endDate) {
+    card.style.display = 'none';
+    return;
+  }
+
+  card.style.display = 'block';
+  list.innerHTML = '<div class="game-card-loading">Loading schedule…</div>';
+
+  try {
+    const res = await fetch(
+      `${CONFIG.SUPABASE_URL}/functions/v1/fetch-ical`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': CONFIG.SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify({ url: window._gcIcalUrl })
+      }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.ical) throw new Error(data.error || 'Could not fetch schedule.');
+
+    const text = data.ical;
+
+    const start = new Date(tournament.startDate + 'T00:00:00');
+    const end   = new Date(tournament.endDate   + 'T23:59:59');
+
+    const events = parseIcal(text)
+      .filter(e => e.date >= start && e.date <= end)
+      .sort((a, b) => a.date - b.date);
+
+    if (!events.length) {
+      list.innerHTML = '<div class="game-card-loading">No games scheduled for this tournament yet.</div>';
+      return;
+    }
+
+    list.innerHTML = events.map(e => {
+      // Extract opponent from "Team A vs Team B" format
+      let opponent = e.summary;
+      let extracted = false;
+      let isAway = false;
+      let vsParts = e.summary.split(/\s+vs\.?\s+/i);
+      if (vsParts.length !== 2) {
+        vsParts = e.summary.split(/\s+@\s+/);
+        if (vsParts.length === 2) isAway = true;
+      }
+      if (vsParts.length === 2) {
+        const teamName = (window._gcTeamName || '').toLowerCase().trim();
+        const part0 = vsParts[0].trim();
+        const part1 = vsParts[1].trim();
+        if (teamName && part0.toLowerCase() === teamName) {
+          opponent = part1; extracted = true;
+        } else if (teamName && part1.toLowerCase() === teamName) {
+          opponent = part0; extracted = true;
+        } else if (teamName && part0.toLowerCase().includes(teamName)) {
+          opponent = part1; extracted = true;
+        } else if (teamName && part1.toLowerCase().includes(teamName)) {
+          opponent = part0; extracted = true;
+        }
+      }
+      const prefix = extracted ? (isAway ? '@ ' : 'vs ') : '';
+      return `
+      <div class="game-card">
+        <div class="game-card-left">
+          <div class="game-card-day">${escapeHTML(formatGameDay(e.date))}</div>
+          <div class="game-card-time">${escapeHTML(formatGameTime(e.date))}</div>
+        </div>
+        <div class="game-card-right">
+          <div class="game-card-opponent">${prefix}${escapeHTML(opponent)}</div>
+          ${e.location ? `<div class="game-card-location">📍 ${escapeHTML(e.location)}</div>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch (err) {
+    list.innerHTML = '<div class="game-card-loading">Could not load schedule.</div>';
+    console.error('Schedule error:', err);
+  }
 }
 
 document.getElementById('view-btn').addEventListener('click', () => {

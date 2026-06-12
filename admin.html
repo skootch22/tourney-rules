@@ -468,6 +468,44 @@
       font-size: .9rem;
     }
 
+    .invite-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      margin-bottom: 2rem;
+    }
+    .invite-desc {
+      font-size: .85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+    .invite-row {
+      display: flex;
+      gap: .75rem;
+      align-items: center;
+    }
+    .invite-row input {
+      flex: 1;
+      background: var(--navy);
+      color: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .6rem .85rem;
+      font-family: 'Barlow', sans-serif;
+      font-size: .92rem;
+      transition: border-color .2s;
+    }
+    .invite-row input:focus { outline: none; border-color: var(--primary); }
+    .invite-status {
+      font-size: .82rem;
+      margin-top: .75rem;
+      min-height: 1.2em;
+    }
+    .invite-status.success { color: var(--green); }
+    .invite-status.error   { color: var(--red); }
+
     footer {
       text-align: center;
       margin-top: 3rem;
@@ -517,6 +555,19 @@
     <input type="email"    id="email-input"    placeholder="Email"    autocomplete="email" />
     <input type="password" id="password-input" placeholder="Password" autocomplete="current-password" />
     <button class="btn-primary" id="btn-login" style="width:100%;">Log In</button>
+  </div>
+</div>
+
+<!-- SET PASSWORD (invite flow) -->
+<div id="set-password-screen" style="display:none;">
+  <div class="login-card" style="max-width:360px; margin:calc(100vh/2 - 200px) auto 0;">
+    <div class="lock-icon">🔑</div>
+    <h2>Set Your Password</h2>
+    <p>Choose a password to complete your account setup.</p>
+    <div class="login-error" id="set-password-error"></div>
+    <input type="password" id="new-password-input" placeholder="New password" autocomplete="new-password" />
+    <input type="password" id="confirm-password-input" placeholder="Confirm password" autocomplete="new-password" style="margin-top:.75rem;" />
+    <button class="btn-primary" id="btn-set-password" style="width:100%; margin-top:1rem;">Set Password &amp; Log In</button>
   </div>
 </div>
 
@@ -601,6 +652,11 @@
         <div class="form-group">
           <label>Innings</label>
           <input type="number" id="f-innings" placeholder="e.g. 6" min="1" max="9" />
+        </div>
+
+        <div class="form-group">
+          <label>Per Inning Run Rule <span class="hint">leave blank if none</span></label>
+          <input type="number" id="f-run-rule" placeholder="e.g. 5" min="1" />
         </div>
 
         <div class="form-group">
@@ -704,6 +760,42 @@
     <!-- Tournament list -->
     <div id="tournament-list">
       <div class="loading-row">Loading tournaments…</div>
+    </div>
+
+    <!-- Admins -->
+    <!-- Team Settings -->
+    <div class="section-header" style="margin-top:2rem;">
+      <span class="section-title">Team Settings</span>
+    </div>
+    <div class="invite-card">
+      <p class="invite-desc">Enter your GameChanger iCal URL to automatically show your team's schedule in the app. This applies to all tournaments — games are filtered by each tournament's date range. You can paste the <strong style="color:var(--light)">webcal://</strong> link directly from GameChanger — it will be converted automatically.</p>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label style="font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">GameChanger iCal URL</label>
+        <input type="text" id="gamechanger-ical-input" placeholder="webcal:// or https://..." autocomplete="off"
+          style="width:100%; background:var(--navy); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.6rem .85rem; font-family:'Barlow',sans-serif; font-size:.88rem; margin-top:.35rem;" />
+      </div>
+      <div class="form-group" style="margin-bottom:.75rem;">
+        <label style="font-family:'Barlow Condensed',sans-serif; font-size:.72rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted);">Your Team Name in GameChanger <span class="hint">used to show just the opponent</span></label>
+        <input type="text" id="gamechanger-team-name-input" placeholder="e.g. OV Xpress 14u" autocomplete="off"
+          style="width:100%; background:var(--navy); color:var(--light); border:1px solid var(--border); border-radius:7px; padding:.6rem .85rem; font-family:'Barlow',sans-serif; font-size:.88rem; margin-top:.35rem;" />
+      </div>
+      <div style="display:flex; gap:.75rem; align-items:center; flex-wrap:wrap;">
+        <button class="btn-primary" id="btn-save-ical">Save</button>
+        <button class="btn-secondary" id="btn-test-ical">Test Feed</button>
+      </div>
+      <div class="invite-status" id="ical-status"></div>
+    </div>
+
+    <div class="section-header" style="margin-top:2rem;">
+      <span class="section-title">Team Admins</span>
+    </div>
+    <div class="invite-card">
+      <p class="invite-desc">Invite another coach or manager to administer this team's tournaments. They'll receive an email to set their password and can log in immediately after.</p>
+      <div class="invite-row">
+        <input type="email" id="invite-email" placeholder="Email address" autocomplete="off" />
+        <button class="btn-primary" id="btn-invite">Send Invite</button>
+      </div>
+      <div class="invite-status" id="invite-status"></div>
     </div>
 
   </div>
@@ -938,19 +1030,22 @@ function getAuthHeaders() {
 }
 
 function showLogin() {
-  document.getElementById('login-screen').style.display  = 'flex';
-  document.getElementById('admin-screen').style.display  = 'none';
-  document.getElementById('btn-logout').style.display    = 'none';
-  document.getElementById('email-input').value           = '';
-  document.getElementById('password-input').value        = '';
-  document.getElementById('login-error').textContent     = '';
+  document.getElementById('login-screen').style.display       = 'flex';
+  document.getElementById('set-password-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display       = 'none';
+  document.getElementById('btn-logout').style.display         = 'none';
+  document.getElementById('email-input').value                = '';
+  document.getElementById('password-input').value             = '';
+  document.getElementById('login-error').textContent          = '';
 }
 
 function showAdmin() {
-  document.getElementById('login-screen').style.display = 'none';
-  document.getElementById('admin-screen').style.display = 'block';
-  document.getElementById('btn-logout').style.display   = 'block';
+  document.getElementById('login-screen').style.display        = 'none';
+  document.getElementById('set-password-screen').style.display = 'none';
+  document.getElementById('admin-screen').style.display        = 'block';
+  document.getElementById('btn-logout').style.display          = 'block';
   loadTournaments();
+  loadTeamSettings();
 }
 
 // Login events
@@ -1244,6 +1339,7 @@ const FIELDS = [
   ['f-gate-fee',         'gate_fee',          'text'],
   ['f-active',           'active',            'bool'],
   ['f-innings',          'innings',           'int'],
+  ['f-run-rule',         'run_rule',          'int'],
   ['f-time-limit',       'time_limit',        'text'],
   ['f-balks',            'balks',             'text'],
   ['f-courtesy-runner',  'courtesy_runner',   'text'],
@@ -1419,8 +1515,210 @@ function escapeAttr(str) {
   return String(str).replace(/'/g, "\\'");
 }
 
+// ── TEAM SETTINGS — GAMECHANGER iCAL ──────────────────────────
+async function loadTeamSettings() {
+  try {
+    const data = await sbFetch(`teams?id=eq.${CONFIG.TEAM_ID}`);
+    if (data && data.length) {
+      document.getElementById('gamechanger-ical-input').value = data[0].gamechanger_ical || '';
+      document.getElementById('gamechanger-team-name-input').value = data[0].gamechanger_team_name || '';
+    }
+  } catch (err) {
+    console.error('Failed to load team settings:', err);
+  }
+}
+
+document.getElementById('btn-save-ical').addEventListener('click', async function() {
+  const raw    = document.getElementById('gamechanger-ical-input').value.trim();
+  const url    = raw.replace(/^webcal:\/\//i, 'https://');
+  const status = document.getElementById('ical-status');
+  const btn    = this;
+
+  // Update the input to show the converted URL
+  if (raw !== url) document.getElementById('gamechanger-ical-input').value = url;
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  status.textContent = '';
+  status.className = 'invite-status';
+
+  try {
+    await sbFetch(`teams?id=eq.${CONFIG.TEAM_ID}`, {
+      method: 'PATCH',
+      headers: { 'Prefer': 'return=minimal' },
+      body: JSON.stringify({
+        gamechanger_ical: url || null,
+        gamechanger_team_name: document.getElementById('gamechanger-team-name-input').value.trim() || null
+      })
+    });
+    status.textContent = '✓ Saved successfully.';
+    status.className = 'invite-status success';
+  } catch (err) {
+    status.textContent = '⚠ ' + err.message;
+    status.className = 'invite-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+});
+
+document.getElementById('btn-test-ical').addEventListener('click', async function() {
+  const raw    = document.getElementById('gamechanger-ical-input').value.trim();
+  const url    = raw.replace(/^webcal:\/\//i, 'https://');
+  const status = document.getElementById('ical-status');
+  const btn    = this;
+
+  if (raw !== url) document.getElementById('gamechanger-ical-input').value = url;
+
+  if (!url) {
+    status.textContent = 'Please enter a URL first.';
+    status.className = 'invite-status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Testing…';
+  status.textContent = '';
+  status.className = 'invite-status';
+
+  try {
+    const res = await fetch(
+      `${CONFIG.SUPABASE_URL}/functions/v1/fetch-ical`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sbSession?.access_token || localStorage.getItem('sb_access_token') || ''}`
+        },
+        body: JSON.stringify({ url })
+      }
+    );
+    const data = await res.json();
+    if (!res.ok || !data.ical) throw new Error(data.error || 'Could not fetch feed.');
+    if (!data.ical.includes('BEGIN:VCALENDAR')) throw new Error('URL does not appear to be a valid iCal feed.');
+    const eventCount = (data.ical.match(/BEGIN:VEVENT/g) || []).length;
+    status.textContent = `✓ Valid iCal feed — ${eventCount} event${eventCount !== 1 ? 's' : ''} in the calendar.`;
+    status.className = 'invite-status success';
+  } catch (err) {
+    status.textContent = '⚠ ' + err.message;
+    status.className = 'invite-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Test Feed';
+  }
+});
+
+// ── INVITE ADMIN ──────────────────────────────────────────────
+document.getElementById('btn-invite').addEventListener('click', async function() {
+  const email  = document.getElementById('invite-email').value.trim();
+  const status = document.getElementById('invite-status');
+  const btn    = document.getElementById('btn-invite');
+
+  if (!email || !email.includes('@')) {
+    status.textContent = 'Please enter a valid email address.';
+    status.className = 'invite-status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  status.textContent = '';
+  status.className = 'invite-status';
+
+  try {
+    const res = await fetch(
+      `${CONFIG.SUPABASE_URL}/functions/v1/invite-admin`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sbSession?.access_token || localStorage.getItem('sb_access_token') || ''}`
+        },
+        body: JSON.stringify({ email, team_id: CONFIG.TEAM_ID, admin_url: CONFIG.ADMIN_URL })
+      }
+    );
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Invite failed.');
+    status.textContent = `✓ Invite sent to ${email}. They'll receive an email to set their password.`;
+    status.className = 'invite-status success';
+    document.getElementById('invite-email').value = '';
+  } catch (err) {
+    status.textContent = '⚠ ' + err.message;
+    status.className = 'invite-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send Invite';
+  }
+});
+
+document.getElementById('invite-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btn-invite').click();
+});
+
+// ── SET PASSWORD (invite flow) ────────────────────────────────
+function getHashParams() {
+  const hash = window.location.hash.substring(1);
+  return Object.fromEntries(new URLSearchParams(hash));
+}
+
+async function handleSetPassword() {
+  const newPw  = document.getElementById('new-password-input').value;
+  const confPw = document.getElementById('confirm-password-input').value;
+  const err    = document.getElementById('set-password-error');
+  const btn    = document.getElementById('btn-set-password');
+
+  if (!newPw) { err.textContent = 'Please enter a password.'; return; }
+  if (newPw.length < 6) { err.textContent = 'Password must be at least 6 characters.'; return; }
+  if (newPw !== confPw) { err.textContent = 'Passwords do not match.'; return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Setting password…';
+  err.textContent = '';
+
+  try {
+    const res = await fetch(`${CONFIG.SUPABASE_URL}/auth/v1/user`, {
+      method: 'PUT',
+      headers: {
+        'apikey': CONFIG.SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${sbSession?.access_token || ''}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password: newPw })
+    });
+    if (!res.ok) {
+      const data = await res.json();
+      throw new Error(data.message || 'Failed to set password.');
+    }
+    // Clear the hash from the URL so it's clean
+    history.replaceState(null, '', window.location.pathname);
+    showAdmin();
+  } catch (e) {
+    err.textContent = e.message;
+    btn.disabled = false;
+    btn.textContent = 'Set Password & Log In';
+  }
+}
+
+document.getElementById('btn-set-password').addEventListener('click', handleSetPassword);
+document.getElementById('confirm-password-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleSetPassword();
+});
+
 // ── INIT ──────────────────────────────────────────────────────
 (async () => {
+  // Check for invite token in URL hash
+  const params = getHashParams();
+  if (params.access_token && params.type === 'invite') {
+    // Store the session from the invite token
+    localStorage.setItem('sb_access_token', params.access_token);
+    if (params.refresh_token) localStorage.setItem('sb_refresh_token', params.refresh_token);
+    sbSession = { access_token: params.access_token };
+    // Show set password screen
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('set-password-screen').style.display = 'flex';
+    return;
+  }
+  // Normal login flow
   const session = await getSession();
   if (session) {
     sbSession = session;
